@@ -119,14 +119,19 @@ if DATABASE_URL.startswith("postgres://"):
 
 # Add SSL and connection args for Supabase pooler
 if "supabase" in DATABASE_URL:
+    # Ensure sslmode is in URL for Supabase
+    if "?" not in DATABASE_URL:
+        DATABASE_URL += "?sslmode=require"
+    elif "sslmode" not in DATABASE_URL:
+        DATABASE_URL += "&sslmode=require"
+
     engine = create_engine(
         DATABASE_URL,
         echo=False,
-        connect_args={
-            "sslmode": "require",
-            "connect_timeout": 30,
-        },
         pool_pre_ping=True,
+        pool_recycle=300,
+        pool_size=5,
+        max_overflow=10,
     )
 else:
     engine = create_engine(DATABASE_URL, echo=False)
