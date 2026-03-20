@@ -114,12 +114,14 @@ class Activity(SQLModel, table=True):
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./greybark.db")
 
+# Convert to psycopg3 driver for Supabase compatibility
 if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://") and "supabase" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
-# Add SSL and connection args for Supabase pooler
+# Add SSL for Supabase
 if "supabase" in DATABASE_URL:
-    # Ensure sslmode is in URL for Supabase
     if "?" not in DATABASE_URL:
         DATABASE_URL += "?sslmode=require"
     elif "sslmode" not in DATABASE_URL:
@@ -130,8 +132,6 @@ if "supabase" in DATABASE_URL:
         echo=False,
         pool_pre_ping=True,
         pool_recycle=300,
-        pool_size=5,
-        max_overflow=10,
     )
 else:
     engine = create_engine(DATABASE_URL, echo=False)
