@@ -117,7 +117,19 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./greybark.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(DATABASE_URL, echo=False)
+# Add SSL and connection args for Supabase pooler
+if "supabase" in DATABASE_URL:
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,
+        connect_args={
+            "sslmode": "require",
+            "connect_timeout": 30,
+        },
+        pool_pre_ping=True,
+    )
+else:
+    engine = create_engine(DATABASE_URL, echo=False)
 
 
 def create_db_and_tables():
