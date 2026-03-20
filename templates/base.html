@@ -10,13 +10,23 @@
             theme: {
                 extend: {
                     colors: {
-                        slate: {
-                            900: '#0f172a',
-                            800: '#1e293b',
-                            700: '#334155',
-                            600: '#475569',
-                            500: '#64748b',
-                            400: '#94a3b8',
+                        dark: {
+                            900: '#000000',
+                            800: '#0a0a0a',
+                            700: '#141414',
+                            600: '#1f1f1f',
+                            500: '#2a2a2a',
+                            400: '#3d3d3d',
+                        },
+                        orange: {
+                            500: '#ED7D31',
+                            600: '#d46a25',
+                            400: '#f59456',
+                        },
+                        gray: {
+                            300: '#d1d5db',
+                            400: '#9ca3af',
+                            500: '#6b7280',
                         }
                     }
                 }
@@ -25,22 +35,22 @@
     </script>
     <style>
         body {
-            background-color: #0f172a;
+            background-color: #000000;
         }
     </style>
 </head>
 <body class="min-h-screen text-white">
     <!-- Header -->
-    <header class="bg-slate-800 border-b border-slate-700">
+    <header class="bg-dark-700 border-b border-dark-500">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="/" class="flex items-center space-x-3">
-                    <img src="/static/logo.png" alt="Greybark" class="h-10 w-10 rounded" onerror="this.style.display='none'">
+                    <img src="/static/logo.png" alt="Greybark" class="h-10 w-10" onerror="this.style.display='none'">
                     <span class="text-xl font-bold text-white">Greybark Deal Tracker</span>
                 </a>
                 <nav class="flex items-center space-x-4">
-                    <a href="/" class="text-slate-400 hover:text-white transition">Dashboard</a>
-                    <a href="/project/new" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+                    <a href="/" class="text-gray-400 hover:text-orange-500 transition">Dashboard</a>
+                    <a href="/project/new" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition font-medium">
                         + Nuevo Proyecto
                     </a>
                 </nav>
@@ -54,9 +64,9 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-800 border-t border-slate-700 mt-auto">
+    <footer class="bg-dark-700 border-t border-dark-500 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <p class="text-center text-slate-500 text-sm">
+            <p class="text-center text-gray-500 text-sm">
                 Greybark Deal Tracker &copy; 2024
             </p>
         </div>

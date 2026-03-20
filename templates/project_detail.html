@@ -5,7 +5,7 @@
 {% block content %}
 <!-- Back Button & Actions -->
 <div class="flex items-center justify-between mb-6">
-    <a href="/" class="text-slate-400 hover:text-white transition flex items-center">
+    <a href="/" class="text-gray-400 hover:text-orange-500 transition flex items-center">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
@@ -13,7 +13,7 @@
     </a>
     <div class="flex items-center space-x-3">
         <a href="/project/{{ project.id }}/edit"
-           class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition">
+           class="bg-dark-500 hover:bg-dark-400 text-white px-4 py-2 rounded-lg transition">
             Editar
         </a>
         <form action="/project/{{ project.id }}/delete" method="POST" class="inline"
@@ -26,7 +26,7 @@
 </div>
 
 <!-- Project Header -->
-<div class="bg-slate-800 rounded-xl border border-slate-700 p-6 mb-6">
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6 mb-6">
     <div class="flex items-start justify-between mb-4">
         <div>
             <div class="flex items-center space-x-3 mb-2">
@@ -39,61 +39,61 @@
                 <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-500/20 text-red-400">Cerrado</span>
                 {% endif %}
             </div>
-            <p class="text-slate-400">{{ project.sector.value | title }}</p>
+            <p class="text-gray-400">{{ project.sector.value | title }}</p>
         </div>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div>
-            <p class="text-slate-500 text-sm">Contraparte</p>
+            <p class="text-gray-500 text-sm">Contraparte</p>
             <p class="text-white font-medium">{{ project.contraparte or '-' }}</p>
         </div>
         <div>
-            <p class="text-slate-500 text-sm">Contacto</p>
+            <p class="text-gray-500 text-sm">Contacto</p>
             <p class="text-white font-medium">{{ project.contacto_nombre or '-' }}</p>
             {% if project.contacto_email %}
-            <p class="text-slate-400 text-sm">{{ project.contacto_email }}</p>
+            <p class="text-gray-400 text-sm">{{ project.contacto_email }}</p>
             {% endif %}
         </div>
         <div>
-            <p class="text-slate-500 text-sm">Monto Deal</p>
+            <p class="text-gray-500 text-sm">Monto Deal</p>
             <p class="text-white font-medium text-lg">${{ "{:,.0f}".format(project.monto_deal) }} USD</p>
         </div>
         <div>
-            <p class="text-slate-500 text-sm">Fee / Probabilidad</p>
+            <p class="text-gray-500 text-sm">Fee / Probabilidad</p>
             <p class="text-white font-medium">{{ project.fee_pct }}% / {{ project.probabilidad }}%</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4 pt-4 border-t border-slate-700">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4 pt-4 border-t border-dark-500">
         <div>
-            <p class="text-slate-500 text-sm">Comisión Proyectada</p>
-            <p class="text-green-400 font-bold text-lg">${{ "{:,.0f}".format(project.comision_proyectada) }}</p>
+            <p class="text-gray-500 text-sm">Comisión Proyectada</p>
+            <p class="text-orange-400 font-bold text-lg">${{ "{:,.0f}".format(project.comision_proyectada) }}</p>
         </div>
         <div>
-            <p class="text-slate-500 text-sm">Fecha Inicio</p>
+            <p class="text-gray-500 text-sm">Fecha Inicio</p>
             <p class="text-white">{{ project.fecha_inicio.strftime('%d/%m/%Y') if project.fecha_inicio else '-' }}</p>
         </div>
         <div>
-            <p class="text-slate-500 text-sm">Cierre Estimado</p>
+            <p class="text-gray-500 text-sm">Cierre Estimado</p>
             <p class="text-white">{{ project.fecha_cierre_estimada.strftime('%d/%m/%Y') if project.fecha_cierre_estimada else '-' }}</p>
         </div>
         <div>
-            <p class="text-slate-500 text-sm">Días Restantes</p>
+            <p class="text-gray-500 text-sm">Días Restantes</p>
             <p class="text-white">{{ project.dias_restantes if project.dias_restantes is not none else '-' }}</p>
         </div>
     </div>
 
     {% if project.notas %}
-    <div class="mt-4 pt-4 border-t border-slate-700">
-        <p class="text-slate-500 text-sm mb-2">Notas</p>
-        <p class="text-slate-300 whitespace-pre-wrap">{{ project.notas }}</p>
+    <div class="mt-4 pt-4 border-t border-dark-500">
+        <p class="text-gray-500 text-sm mb-2">Notas</p>
+        <p class="text-gray-300 whitespace-pre-wrap">{{ project.notas }}</p>
     </div>
     {% endif %}
 </div>
 
 <!-- Milestones -->
-<div class="bg-slate-800 rounded-xl border border-slate-700 p-6 mb-6">
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6 mb-6">
     <h2 class="text-xl font-bold text-white mb-6">Hitos del Proyecto</h2>
 
     <!-- Visual Progress -->
@@ -103,7 +103,7 @@
             <button onclick="toggleMilestone({{ milestone.id }})"
                     id="milestone-btn-{{ milestone.id }}"
                     class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition cursor-pointer
-                           {% if milestone.completado %}bg-green-500 text-white{% else %}bg-slate-700 text-slate-400 border-2 border-slate-600{% endif %}">
+                           {% if milestone.completado %}bg-orange-500 text-white{% else %}bg-dark-500 text-gray-400 border-2 border-dark-400{% endif %}">
                 {% if milestone.completado %}
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -112,25 +112,25 @@
                 {{ loop.index }}
                 {% endif %}
             </button>
-            <p class="text-xs text-slate-400 mt-2 text-center max-w-[80px]">{{ milestone.nombre }}</p>
+            <p class="text-xs text-gray-400 mt-2 text-center max-w-[80px]">{{ milestone.nombre }}</p>
             {% if milestone.fecha_completado %}
-            <p class="text-xs text-slate-500">{{ milestone.fecha_completado.strftime('%d/%m') }}</p>
+            <p class="text-xs text-gray-500">{{ milestone.fecha_completado.strftime('%d/%m') }}</p>
             {% endif %}
         </div>
         {% if not loop.last %}
-        <div class="flex-1 h-1 {% if milestone.completado %}bg-green-500{% else %}bg-slate-700{% endif %} mx-1 min-w-[20px]"></div>
+        <div class="flex-1 h-1 {% if milestone.completado %}bg-orange-500{% else %}bg-dark-500{% endif %} mx-1 min-w-[20px]"></div>
         {% endif %}
         {% endfor %}
     </div>
 </div>
 
 <!-- AI Summary -->
-<div class="bg-slate-800 rounded-xl border border-slate-700 p-6 mb-6">
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6 mb-6">
     <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-white">Resumen IA</h2>
         <button onclick="generateAISummary()"
                 id="ai-summary-btn"
-                class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
@@ -139,29 +139,29 @@
     </div>
     <div id="ai-summary-container" class="hidden">
         <div id="ai-summary-loading" class="hidden text-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
-            <p class="text-slate-400 mt-2">Generando análisis...</p>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+            <p class="text-gray-400 mt-2">Generando análisis...</p>
         </div>
         <div id="ai-summary-content" class="hidden space-y-4">
-            <div class="bg-slate-700/50 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-slate-400 mb-2">Resumen Ejecutivo</h3>
+            <div class="bg-dark-600 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-400 mb-2">Resumen Ejecutivo</h3>
                 <p id="ai-executive-summary" class="text-white"></p>
             </div>
-            <div class="bg-slate-700/50 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-slate-400 mb-2">Estado Actual</h3>
+            <div class="bg-dark-600 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-400 mb-2">Estado Actual</h3>
                 <p id="ai-estado-actual" class="text-white"></p>
             </div>
-            <div class="bg-slate-700/50 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-slate-400 mb-2">Riesgos Identificados</h3>
+            <div class="bg-dark-600 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-400 mb-2">Riesgos Identificados</h3>
                 <ul id="ai-riesgos" class="list-disc list-inside text-white space-y-1"></ul>
             </div>
-            <div class="bg-slate-700/50 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-slate-400 mb-2">Próximos Pasos</h3>
+            <div class="bg-dark-600 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-400 mb-2">Próximos Pasos</h3>
                 <ul id="ai-proximos-pasos" class="list-disc list-inside text-white space-y-1"></ul>
             </div>
-            <div class="bg-purple-500/20 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-purple-400 mb-2">Probabilidad Sugerida por IA</h3>
-                <p id="ai-probabilidad" class="text-2xl font-bold text-purple-400"></p>
+            <div class="bg-orange-500/20 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-orange-400 mb-2">Probabilidad Sugerida por IA</h3>
+                <p id="ai-probabilidad" class="text-2xl font-bold text-orange-400"></p>
             </div>
         </div>
         <div id="ai-summary-error" class="hidden bg-red-500/20 rounded-lg p-4">
@@ -171,23 +171,23 @@
 </div>
 
 <!-- Documents -->
-<div class="bg-slate-800 rounded-xl border border-slate-700 p-6 mb-6">
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6 mb-6">
     <h2 class="text-xl font-bold text-white mb-4">Documentos</h2>
 
     <!-- Add Document Form -->
-    <form action="/api/documents/add" method="POST" class="mb-6 p-4 bg-slate-700/50 rounded-lg">
+    <form action="/api/documents/add" method="POST" class="mb-6 p-4 bg-dark-600 rounded-lg">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <input type="hidden" name="project_id" value="{{ project.id }}">
             <input type="text" name="nombre" placeholder="Nombre del documento" required
-                   class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
+                   class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             <input type="url" name="url_drive" placeholder="URL Google Drive"
-                   class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
-            <select name="tipo" class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-slate-500">
+                   class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
+            <select name="tipo" class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
                 {% for tipo in tipos_documento %}
                 <option value="{{ tipo.value }}">{{ tipo.value | title }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2 transition">
+            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2 transition">
                 Agregar
             </button>
         </div>
@@ -198,7 +198,7 @@
     <div class="overflow-x-auto">
         <table class="w-full">
             <thead>
-                <tr class="text-left text-slate-400 text-sm border-b border-slate-700">
+                <tr class="text-left text-gray-400 text-sm border-b border-dark-500">
                     <th class="pb-3">Nombre</th>
                     <th class="pb-3">Tipo</th>
                     <th class="pb-3">Fecha</th>
@@ -207,10 +207,10 @@
             </thead>
             <tbody>
                 {% for doc in documents %}
-                <tr class="border-b border-slate-700/50">
+                <tr class="border-b border-dark-600">
                     <td class="py-3">
                         {% if doc.url_drive %}
-                        <a href="{{ doc.url_drive }}" target="_blank" class="text-blue-400 hover:text-blue-300">
+                        <a href="{{ doc.url_drive }}" target="_blank" class="text-orange-400 hover:text-orange-300">
                             {{ doc.nombre }}
                         </a>
                         {% else %}
@@ -218,11 +218,11 @@
                         {% endif %}
                     </td>
                     <td class="py-3">
-                        <span class="px-2 py-1 text-xs rounded bg-slate-700 text-slate-300">
+                        <span class="px-2 py-1 text-xs rounded bg-dark-500 text-gray-300">
                             {{ doc.tipo.value | title }}
                         </span>
                     </td>
-                    <td class="py-3 text-slate-400 text-sm">{{ doc.uploaded_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td class="py-3 text-gray-400 text-sm">{{ doc.uploaded_at.strftime('%d/%m/%Y %H:%M') }}</td>
                     <td class="py-3">
                         <form action="/api/documents/{{ doc.id }}/delete" method="POST" class="inline"
                               onsubmit="return confirm('¿Eliminar este documento?')">
@@ -235,12 +235,12 @@
         </table>
     </div>
     {% else %}
-    <p class="text-slate-500 text-center py-4">No hay documentos todavía</p>
+    <p class="text-gray-500 text-center py-4">No hay documentos todavía</p>
     {% endif %}
 </div>
 
 <!-- Activities -->
-<div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6">
     <h2 class="text-xl font-bold text-white mb-4">Actividad</h2>
 
     <!-- Add Activity Form -->
@@ -248,8 +248,8 @@
         <div class="flex space-x-4">
             <input type="hidden" name="project_id" value="{{ project.id }}">
             <input type="text" name="descripcion" placeholder="Agregar nota de actividad..." required
-                   class="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white rounded-lg px-6 py-2 transition">
+                   class="flex-1 bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
+            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 py-2 transition">
                 Agregar
             </button>
         </div>
@@ -260,16 +260,16 @@
     <div class="space-y-4">
         {% for activity in activities %}
         <div class="flex items-start space-x-4">
-            <div class="w-2 h-2 mt-2 rounded-full bg-slate-500"></div>
+            <div class="w-2 h-2 mt-2 rounded-full bg-orange-500"></div>
             <div class="flex-1">
                 <p class="text-white">{{ activity.descripcion }}</p>
-                <p class="text-slate-500 text-sm">{{ activity.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                <p class="text-gray-500 text-sm">{{ activity.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
             </div>
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <p class="text-slate-500 text-center py-4">No hay actividad registrada</p>
+    <p class="text-gray-500 text-center py-4">No hay actividad registrada</p>
     {% endif %}
 </div>
 {% endblock %}
@@ -285,13 +285,12 @@ async function toggleMilestone(milestoneId) {
 
         const btn = document.getElementById(`milestone-btn-${milestoneId}`);
         if (data.completado) {
-            btn.classList.remove('bg-slate-700', 'text-slate-400', 'border-2', 'border-slate-600');
-            btn.classList.add('bg-green-500', 'text-white');
+            btn.classList.remove('bg-dark-500', 'text-gray-400', 'border-2', 'border-dark-400');
+            btn.classList.add('bg-orange-500', 'text-white');
             btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
         } else {
-            btn.classList.add('bg-slate-700', 'text-slate-400', 'border-2', 'border-slate-600');
-            btn.classList.remove('bg-green-500', 'text-white');
-            // We'd need to know the order to show the number
+            btn.classList.add('bg-dark-500', 'text-gray-400', 'border-2', 'border-dark-400');
+            btn.classList.remove('bg-orange-500', 'text-white');
             location.reload();
         }
     } catch (error) {

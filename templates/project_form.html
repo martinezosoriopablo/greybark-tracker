@@ -5,7 +5,7 @@
 {% block content %}
 <!-- Back Button -->
 <div class="mb-6">
-    <a href="{% if project %}/project/{{ project.id }}{% else %}/{% endif %}" class="text-slate-400 hover:text-white transition flex items-center">
+    <a href="{% if project %}/project/{{ project.id }}{% else %}/{% endif %}" class="text-gray-400 hover:text-orange-500 transition flex items-center">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
@@ -13,7 +13,7 @@
     </a>
 </div>
 
-<div class="bg-slate-800 rounded-xl border border-slate-700 p-6">
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6">
     <h1 class="text-2xl font-bold text-white mb-6">
         {% if project %}Editar Proyecto{% else %}Nuevo Proyecto{% endif %}
     </h1>
@@ -22,16 +22,16 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Nombre -->
             <div class="md:col-span-2">
-                <label class="block text-slate-400 text-sm mb-2">Nombre del Proyecto *</label>
+                <label class="block text-gray-400 text-sm mb-2">Nombre del Proyecto *</label>
                 <input type="text" name="nombre" required
                        value="{{ project.nombre if project else '' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Sector -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Sector</label>
-                <select name="sector" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-slate-500">
+                <label class="block text-gray-400 text-sm mb-2">Sector</label>
+                <select name="sector" class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
                     {% for sector in sectores %}
                     <option value="{{ sector.value }}" {% if project and project.sector == sector %}selected{% endif %}>
                         {{ sector.value | title }}
@@ -42,8 +42,8 @@
 
             <!-- Estado -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Estado</label>
-                <select name="estado" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-slate-500">
+                <label class="block text-gray-400 text-sm mb-2">Estado</label>
+                <select name="estado" class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
                     {% for estado in estados %}
                     <option value="{{ estado.value }}" {% if project and project.estado == estado %}selected{% endif %}>
                         {{ estado.value | title }}
@@ -54,84 +54,84 @@
 
             <!-- Contraparte -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Contraparte (Empresa)</label>
+                <label class="block text-gray-400 text-sm mb-2">Contraparte (Empresa)</label>
                 <input type="text" name="contraparte"
                        value="{{ project.contraparte if project else '' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Contacto Nombre -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Nombre Contacto</label>
+                <label class="block text-gray-400 text-sm mb-2">Nombre Contacto</label>
                 <input type="text" name="contacto_nombre"
                        value="{{ project.contacto_nombre if project else '' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Contacto Email -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Email Contacto</label>
+                <label class="block text-gray-400 text-sm mb-2">Email Contacto</label>
                 <input type="email" name="contacto_email"
                        value="{{ project.contacto_email if project else '' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Monto Deal -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Monto Deal (USD)</label>
+                <label class="block text-gray-400 text-sm mb-2">Monto Deal (USD)</label>
                 <input type="number" name="monto_deal" step="0.01" min="0"
                        value="{{ project.monto_deal if project else '0' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Fee % -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Fee (%)</label>
+                <label class="block text-gray-400 text-sm mb-2">Fee (%)</label>
                 <input type="number" name="fee_pct" step="0.01" min="0" max="100"
                        value="{{ project.fee_pct if project else '0' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Probabilidad -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Probabilidad (%)</label>
+                <label class="block text-gray-400 text-sm mb-2">Probabilidad (%)</label>
                 <input type="number" name="probabilidad" min="0" max="100"
                        value="{{ project.probabilidad if project else '50' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Fecha Inicio -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Fecha Inicio</label>
+                <label class="block text-gray-400 text-sm mb-2">Fecha Inicio</label>
                 <input type="date" name="fecha_inicio"
                        value="{{ project.fecha_inicio.strftime('%Y-%m-%d') if project and project.fecha_inicio else '' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Fecha Cierre Estimada -->
             <div>
-                <label class="block text-slate-400 text-sm mb-2">Fecha Cierre Estimada</label>
+                <label class="block text-gray-400 text-sm mb-2">Fecha Cierre Estimada</label>
                 <input type="date" name="fecha_cierre_estimada"
                        value="{{ project.fecha_cierre_estimada.strftime('%Y-%m-%d') if project and project.fecha_cierre_estimada else '' }}"
-                       class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-slate-500">
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
             </div>
 
             <!-- Notas -->
             <div class="md:col-span-2">
-                <label class="block text-slate-400 text-sm mb-2">Notas</label>
+                <label class="block text-gray-400 text-sm mb-2">Notas</label>
                 <textarea name="notas" rows="4"
-                          class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-slate-500 resize-none">{{ project.notas if project else '' }}</textarea>
+                          class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 resize-none">{{ project.notas if project else '' }}</textarea>
             </div>
         </div>
 
         <!-- Submit -->
         <div class="mt-6 flex items-center justify-end space-x-4">
             <a href="{% if project %}/project/{{ project.id }}{% else %}/{% endif %}"
-               class="text-slate-400 hover:text-white transition px-4 py-2">
+               class="text-gray-400 hover:text-white transition px-4 py-2">
                 Cancelar
             </a>
             <button type="submit"
-                    class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg transition font-medium">
+                    class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg transition font-medium">
                 {% if project %}Guardar Cambios{% else %}Crear Proyecto{% endif %}
             </button>
         </div>
