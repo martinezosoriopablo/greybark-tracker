@@ -92,13 +92,30 @@
             {% endfor %}
         </select>
 
+        <!-- Contraparte Filter -->
+        <select name="contraparte" class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+            <option value="todos" {% if filter_contraparte == 'todos' %}selected{% endif %}>Todas las contrapartes</option>
+            {% for c in contrapartes_list %}
+            <option value="{{ c }}" {% if filter_contraparte == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Etapa Filter -->
+        <select name="etapa" class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+            <option value="todos" {% if filter_etapa == 'todos' %}selected{% endif %}>Todas las etapas</option>
+            <option value="sin_iniciar" {% if filter_etapa == 'sin_iniciar' %}selected{% endif %}>Sin iniciar</option>
+            {% for etapa in etapas_list %}
+            <option value="{{ etapa }}" {% if filter_etapa == etapa %}selected{% endif %}>{{ etapa }}</option>
+            {% endfor %}
+        </select>
+
         <!-- Filter Button -->
         <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition">
             Filtrar
         </button>
 
         <!-- Clear Filters -->
-        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' %}
+        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' %}
         <a href="/" class="text-gray-400 hover:text-white transition px-2">Limpiar</a>
         {% endif %}
     </form>
@@ -296,13 +313,13 @@
     </svg>
     <h3 class="text-xl font-medium text-gray-400 mb-2">No hay proyectos</h3>
     <p class="text-gray-500 mb-6">
-        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' %}
+        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' %}
         No se encontraron proyectos con los filtros aplicados.
         {% else %}
         Crea tu primer proyecto para comenzar a trackear deals.
         {% endif %}
     </p>
-    {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' %}
+    {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' %}
     <a href="/" class="inline-block bg-dark-500 hover:bg-dark-400 text-white px-6 py-3 rounded-lg transition font-medium mr-2">
         Limpiar Filtros
     </a>

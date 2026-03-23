@@ -9,11 +9,19 @@ from sqlmodel import Session, select
 from database import (
     Project, Milestone, Document, Activity, Contraparte,
     get_session, create_milestones_for_project,
-    SectorEnum, EstadoEnum
+    SectorEnum, EstadoEnum, MILESTONE_NAMES
 )
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+
+def get_current_stage(milestones):
+    """Get the name of the last completed milestone (current stage)"""
+    completed = [m for m in sorted(milestones, key=lambda x: x.orden) if m.completado]
+    if completed:
+        return completed[-1].nombre
+    return None
 
 
 @router.get("/")
@@ -21,18 +29,26 @@ def dashboard(
     request: Request,
     sector: Optional[str] = Query(None),
     estado: Optional[str] = Query(None),
+    contraparte: Optional[str] = Query(None),
+    etapa: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     session: Session = Depends(get_session)
 ):
     statement = select(Project).order_by(Project.updated_at.desc())
     projects = session.exec(statement).all()
 
-    # Load relationships
+    # Load relationships and calculate current stage
     for project in projects:
         _ = project.milestones
         _ = project.documents
         _ = project.activities
         _ = project.contrapartes
+        # Add current stage as attribute
+        project.current_stage = get_current_stage(project.milestones)
+
+    # Get all unique contrapartes for filter dropdown
+    all_contrapartes = session.exec(select(Contraparte)).all()
+    unique_contrapartes = sorted(set(c.nombre_empresa for c in all_contrapartes))
 
     # Apply filters
     if sector and sector != "todos":
@@ -40,6 +56,18 @@ def dashboard(
 
     if estado and estado != "todos":
         projects = [p for p in projects if p.estado.value == estado]
+
+    if contraparte and contraparte != "todos":
+        projects = [
+            p for p in projects
+            if any(c.nombre_empresa == contraparte for c in p.contrapartes)
+        ]
+
+    if etapa and etapa != "todos":
+        if etapa == "sin_iniciar":
+            projects = [p for p in projects if p.current_stage is None]
+        else:
+            projects = [p for p in projects if p.current_stage == etapa]
 
     if search:
         search_lower = search.lower()
@@ -49,7 +77,7 @@ def dashboard(
             or any(search_lower in c.nombre_empresa.lower() for c in p.contrapartes)
         ]
 
-    # Calculate KPIs (from filtered projects for activos, but all for totals)
+    # Calculate KPIs (from all projects, not filtered)
     all_projects = session.exec(select(Project)).all()
     for p in all_projects:
         _ = p.milestones
@@ -83,8 +111,12 @@ def dashboard(
             "comision_cerrados": comision_cerrados,
             "sectores": SectorEnum,
             "estados": EstadoEnum,
+            "contrapartes_list": unique_contrapartes,
+            "etapas_list": MILESTONE_NAMES,
             "filter_sector": sector or "todos",
             "filter_estado": estado or "todos",
+            "filter_contraparte": contraparte or "todos",
+            "filter_etapa": etapa or "todos",
             "filter_search": search or "",
         }
     )
