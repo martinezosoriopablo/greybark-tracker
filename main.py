@@ -54,6 +54,42 @@ def debug_check():
         return {"status": "error", "message": str(e)}
 
 
+@app.get("/debug-create")
+def debug_create():
+    """Debug endpoint to test project creation"""
+    from sqlmodel import Session
+    from database import engine, Project, Activity, SectorEnum, EstadoEnum, create_milestones_for_project
+
+    try:
+        with Session(engine) as session:
+            project = Project(
+                nombre="TEST DEBUG",
+                sector=SectorEnum.OTRO,
+                monto_deal=1000.0,
+                fee_pct=2.0,
+                probabilidad=50,
+                estado=EstadoEnum.ACTIVO,
+                notas="Test project",
+            )
+            session.add(project)
+            session.commit()
+            session.refresh(project)
+
+            create_milestones_for_project(session, project.id)
+
+            activity = Activity(
+                project_id=project.id,
+                descripcion="Proyecto creado"
+            )
+            session.add(activity)
+            session.commit()
+
+            return {"status": "ok", "project_id": project.id, "nombre": project.nombre}
+    except Exception as e:
+        import traceback
+        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
+
+
 @app.get("/migrate-milestones")
 def migrate_milestones():
     """One-time migration to remove 'Proyecto' milestone from existing projects"""
