@@ -1,13 +1,13 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Request, Form, HTTPException
+from fastapi import APIRouter, Depends, Request, Form, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 
 from database import (
-    Project, Milestone, Document, Activity,
+    Project, Milestone, Document, Activity, Contraparte,
     get_session, create_milestones_for_project,
     SectorEnum, EstadoEnum
 )
@@ -17,29 +17,57 @@ templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/")
-def dashboard(request: Request, session: Session = Depends(get_session)):
+def dashboard(
+    request: Request,
+    sector: Optional[str] = Query(None),
+    estado: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    session: Session = Depends(get_session)
+):
     statement = select(Project).order_by(Project.updated_at.desc())
     projects = session.exec(statement).all()
 
+    # Load relationships
     for project in projects:
         _ = project.milestones
         _ = project.documents
         _ = project.activities
+        _ = project.contrapartes
 
-    activos = [p for p in projects if p.estado == EstadoEnum.ACTIVO]
+    # Apply filters
+    if sector and sector != "todos":
+        projects = [p for p in projects if p.sector.value == sector]
+
+    if estado and estado != "todos":
+        projects = [p for p in projects if p.estado.value == estado]
+
+    if search:
+        search_lower = search.lower()
+        projects = [
+            p for p in projects
+            if search_lower in p.nombre.lower()
+            or any(search_lower in c.nombre_empresa.lower() for c in p.contrapartes)
+        ]
+
+    # Calculate KPIs (from filtered projects for activos, but all for totals)
+    all_projects = session.exec(select(Project)).all()
+    for p in all_projects:
+        _ = p.milestones
+
+    activos = [p for p in all_projects if p.estado == EstadoEnum.ACTIVO]
     total_activos = len(activos)
 
     pipeline_ponderado = sum(p.comision_proyectada for p in activos)
 
     closing_termsheet = sum(
-        1 for p in projects
+        1 for p in all_projects
         if p.estado == EstadoEnum.ACTIVO and any(
             m.completado and m.nombre in ["Term Sheet", "Closing"]
             for m in p.milestones
         )
     )
 
-    cerrados = [p for p in projects if p.estado == EstadoEnum.CERRADO]
+    cerrados = [p for p in all_projects if p.estado == EstadoEnum.CERRADO]
     comision_cerrados = sum(
         p.monto_deal * (p.fee_pct / 100) for p in cerrados
     )
@@ -53,6 +81,11 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
             "pipeline_ponderado": pipeline_ponderado,
             "closing_termsheet": closing_termsheet,
             "comision_cerrados": comision_cerrados,
+            "sectores": SectorEnum,
+            "estados": EstadoEnum,
+            "filter_sector": sector or "todos",
+            "filter_estado": estado or "todos",
+            "filter_search": search or "",
         }
     )
 
@@ -75,9 +108,6 @@ def project_create(
     request: Request,
     nombre: str = Form(...),
     sector: str = Form(...),
-    contraparte: str = Form(""),
-    contacto_nombre: str = Form(""),
-    contacto_email: str = Form(""),
     monto_deal: float = Form(0.0),
     fee_pct: float = Form(0.0),
     probabilidad: int = Form(50),
@@ -104,9 +134,6 @@ def project_create(
     project = Project(
         nombre=nombre,
         sector=SectorEnum(sector),
-        contraparte=contraparte,
-        contacto_nombre=contacto_nombre,
-        contacto_email=contacto_email,
         monto_deal=monto_deal,
         fee_pct=fee_pct,
         probabilidad=probabilidad,
@@ -159,6 +186,12 @@ def project_detail(
         .order_by(Activity.created_at.desc())
     ).all()
 
+    contrapartes = session.exec(
+        select(Contraparte)
+        .where(Contraparte.project_id == project_id)
+        .order_by(Contraparte.created_at.desc())
+    ).all()
+
     from database import TipoDocumentoEnum
 
     return templates.TemplateResponse(
@@ -169,6 +202,7 @@ def project_detail(
             "milestones": milestones,
             "documents": documents,
             "activities": activities,
+            "contrapartes": contrapartes,
             "tipos_documento": TipoDocumentoEnum,
         }
     )
@@ -201,9 +235,6 @@ def project_update(
     project_id: int,
     nombre: str = Form(...),
     sector: str = Form(...),
-    contraparte: str = Form(""),
-    contacto_nombre: str = Form(""),
-    contacto_email: str = Form(""),
     monto_deal: float = Form(0.0),
     fee_pct: float = Form(0.0),
     probabilidad: int = Form(50),
@@ -233,9 +264,6 @@ def project_update(
 
     project.nombre = nombre
     project.sector = SectorEnum(sector)
-    project.contraparte = contraparte
-    project.contacto_nombre = contacto_nombre
-    project.contacto_email = contacto_email
     project.monto_deal = monto_deal
     project.fee_pct = fee_pct
     project.probabilidad = probabilidad
@@ -267,23 +295,33 @@ def project_delete(
     if not project:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
+    # Delete milestones
     milestones = session.exec(
         select(Milestone).where(Milestone.project_id == project_id)
     ).all()
     for m in milestones:
         session.delete(m)
 
+    # Delete documents
     documents = session.exec(
         select(Document).where(Document.project_id == project_id)
     ).all()
     for d in documents:
         session.delete(d)
 
+    # Delete activities
     activities = session.exec(
         select(Activity).where(Activity.project_id == project_id)
     ).all()
     for a in activities:
         session.delete(a)
+
+    # Delete contrapartes
+    contrapartes = session.exec(
+        select(Contraparte).where(Contraparte.project_id == project_id)
+    ).all()
+    for c in contrapartes:
+        session.delete(c)
 
     session.delete(project)
     session.commit()

@@ -4,7 +4,7 @@ import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
-from database import Project, Milestone, Document, Activity, get_session
+from database import Project, Milestone, Document, Activity, Contraparte, get_session
 
 router = APIRouter(prefix="/api/ai_summary", tags=["ai_summary"])
 
@@ -35,6 +35,11 @@ async def generate_ai_summary(
         .order_by(Activity.created_at.desc())
     ).all()
 
+    contrapartes = session.exec(
+        select(Contraparte)
+        .where(Contraparte.project_id == project_id)
+    ).all()
+
     milestones_info = [
         {
             "nombre": m.nombre,
@@ -57,11 +62,18 @@ async def generate_ai_summary(
         for a in activities[:20]
     ]
 
+    contrapartes_info = [
+        {
+            "empresa": c.nombre_empresa,
+            "contacto": c.contacto_nombre,
+            "email": c.contacto_email
+        }
+        for c in contrapartes
+    ]
+
     project_data = f"""
 PROYECTO: {project.nombre}
 Sector: {project.sector.value}
-Contraparte: {project.contraparte}
-Contacto: {project.contacto_nombre} ({project.contacto_email})
 Monto del Deal: ${project.monto_deal:,.2f} USD
 Fee: {project.fee_pct}%
 Probabilidad actual: {project.probabilidad}%
@@ -69,10 +81,13 @@ Estado: {project.estado.value}
 Fecha inicio: {project.fecha_inicio.strftime('%Y-%m-%d') if project.fecha_inicio else 'No definida'}
 Fecha cierre estimada: {project.fecha_cierre_estimada.strftime('%Y-%m-%d') if project.fecha_cierre_estimada else 'No definida'}
 
+CONTRAPARTES:
+{json.dumps(contrapartes_info, indent=2, ensure_ascii=False) if contrapartes_info else 'Sin contrapartes definidas'}
+
 NOTAS:
 {project.notas or 'Sin notas'}
 
-HITOS:
+HITOS (10 totales):
 {json.dumps(milestones_info, indent=2, ensure_ascii=False)}
 
 DOCUMENTOS:

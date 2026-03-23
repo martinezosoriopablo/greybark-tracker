@@ -66,16 +66,70 @@
     </div>
 </div>
 
-<!-- Projects Grid -->
+<!-- Filters -->
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-4 mb-6">
+    <form method="GET" action="/" class="flex flex-wrap items-center gap-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-[200px]">
+            <input type="text" name="search" placeholder="Buscar proyecto o contraparte..."
+                   value="{{ filter_search }}"
+                   class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
+        </div>
+
+        <!-- Sector Filter -->
+        <select name="sector" class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+            <option value="todos" {% if filter_sector == 'todos' %}selected{% endif %}>Todos los sectores</option>
+            {% for s in sectores %}
+            <option value="{{ s.value }}" {% if filter_sector == s.value %}selected{% endif %}>{{ s.value | title }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Estado Filter -->
+        <select name="estado" class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+            <option value="todos" {% if filter_estado == 'todos' %}selected{% endif %}>Todos los estados</option>
+            {% for e in estados %}
+            <option value="{{ e.value }}" {% if filter_estado == e.value %}selected{% endif %}>{{ e.value | title }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Filter Button -->
+        <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition">
+            Filtrar
+        </button>
+
+        <!-- Clear Filters -->
+        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' %}
+        <a href="/" class="text-gray-400 hover:text-white transition px-2">Limpiar</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Projects Header -->
 <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-white">Proyectos</h2>
-    <a href="/project/new" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition font-medium">
-        + Nuevo Proyecto
-    </a>
+    <h2 class="text-2xl font-bold text-white">Proyectos ({{ projects|length }})</h2>
+    <div class="flex items-center space-x-4">
+        <!-- View Toggle -->
+        <div class="flex items-center bg-dark-700 rounded-lg border border-dark-500 p-1">
+            <button onclick="setView('cards')" id="btn-cards" class="p-2 rounded transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                </svg>
+            </button>
+            <button onclick="setView('list')" id="btn-list" class="p-2 rounded transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        <a href="/project/new" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition font-medium">
+            + Nuevo Proyecto
+        </a>
+    </div>
 </div>
 
 {% if projects %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Cards View -->
+<div id="view-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for project in projects %}
     <div class="bg-dark-700 rounded-xl border border-dark-500 overflow-hidden hover:border-orange-500/50 transition">
         <div class="p-6">
@@ -83,7 +137,16 @@
             <div class="flex items-start justify-between mb-4">
                 <div>
                     <h3 class="text-lg font-semibold text-white">{{ project.nombre }}</h3>
-                    <p class="text-gray-400 text-sm">{{ project.contraparte }}</p>
+                    <p class="text-gray-400 text-sm">
+                        {% if project.contrapartes %}
+                            {{ project.contrapartes[0].nombre_empresa }}
+                            {% if project.contrapartes|length > 1 %}
+                            <span class="text-orange-400">+{{ project.contrapartes|length - 1 }}</span>
+                            {% endif %}
+                        {% else %}
+                            Sin contraparte
+                        {% endif %}
+                    </p>
                 </div>
                 <!-- Estado Semáforo -->
                 {% if project.estado.value == 'activo' %}
@@ -100,14 +163,14 @@
                 {{ project.sector.value | title }}
             </span>
 
-            <!-- Progress Bar (11 hitos) -->
+            <!-- Progress Bar (10 hitos) -->
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm text-gray-400">Progreso</span>
-                    <span class="text-sm text-gray-400">{{ project.hitos_completados }}/11</span>
+                    <span class="text-sm text-gray-400">{{ project.hitos_completados }}/10</span>
                 </div>
                 <div class="flex items-center space-x-1">
-                    {% for i in range(11) %}
+                    {% for i in range(10) %}
                     {% set milestone = project.milestones[i] if i < project.milestones|length else none %}
                     <div class="flex-1 h-2 rounded-full {% if milestone and milestone.completado %}bg-orange-500{% else %}bg-dark-500{% endif %}"></div>
                     {% endfor %}
@@ -151,16 +214,137 @@
     </div>
     {% endfor %}
 </div>
+
+<!-- List View -->
+<div id="view-list" class="hidden">
+    <div class="bg-dark-700 rounded-xl border border-dark-500 overflow-hidden">
+        <table class="w-full">
+            <thead>
+                <tr class="text-left text-gray-400 text-sm border-b border-dark-500">
+                    <th class="px-6 py-4">Proyecto</th>
+                    <th class="px-6 py-4">Contraparte(s)</th>
+                    <th class="px-6 py-4">Sector</th>
+                    <th class="px-6 py-4">Estado</th>
+                    <th class="px-6 py-4">Progreso</th>
+                    <th class="px-6 py-4">Monto</th>
+                    <th class="px-6 py-4">Comisión</th>
+                    <th class="px-6 py-4">Cierre</th>
+                    <th class="px-6 py-4"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
+                <tr class="border-b border-dark-600 hover:bg-dark-600/50 transition">
+                    <td class="px-6 py-4">
+                        <span class="text-white font-medium">{{ project.nombre }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if project.contrapartes %}
+                            <span class="text-gray-300">{{ project.contrapartes[0].nombre_empresa }}</span>
+                            {% if project.contrapartes|length > 1 %}
+                            <span class="text-orange-400 text-sm">+{{ project.contrapartes|length - 1 }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-gray-500">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded bg-dark-500 text-gray-300">{{ project.sector.value | title }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if project.estado.value == 'activo' %}
+                        <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>Activo</span>
+                        {% elif project.estado.value == 'pausa' %}
+                        <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>Pausa</span>
+                        {% else %}
+                        <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span>Cerrado</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex space-x-0.5 w-24">
+                                {% for i in range(10) %}
+                                {% set milestone = project.milestones[i] if i < project.milestones|length else none %}
+                                <div class="flex-1 h-2 rounded-full {% if milestone and milestone.completado %}bg-orange-500{% else %}bg-dark-500{% endif %}"></div>
+                                {% endfor %}
+                            </div>
+                            <span class="text-gray-400 text-sm">{{ project.hitos_completados }}/10</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-white">${{ "{:,.0f}".format(project.monto_deal) }}</td>
+                    <td class="px-6 py-4 text-orange-400">${{ "{:,.0f}".format(project.comision_proyectada) }}</td>
+                    <td class="px-6 py-4 text-gray-400">
+                        {% if project.fecha_cierre_estimada %}
+                        {{ project.fecha_cierre_estimada.strftime('%d/%m/%Y') }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <a href="/project/{{ project.id }}" class="text-orange-400 hover:text-orange-300">Ver</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% else %}
 <div class="bg-dark-700 rounded-xl border border-dark-500 p-12 text-center">
     <svg class="w-16 h-16 text-dark-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
     </svg>
-    <h3 class="text-xl font-medium text-gray-400 mb-2">No hay proyectos todavía</h3>
-    <p class="text-gray-500 mb-6">Crea tu primer proyecto para comenzar a trackear deals.</p>
+    <h3 class="text-xl font-medium text-gray-400 mb-2">No hay proyectos</h3>
+    <p class="text-gray-500 mb-6">
+        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' %}
+        No se encontraron proyectos con los filtros aplicados.
+        {% else %}
+        Crea tu primer proyecto para comenzar a trackear deals.
+        {% endif %}
+    </p>
+    {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' %}
+    <a href="/" class="inline-block bg-dark-500 hover:bg-dark-400 text-white px-6 py-3 rounded-lg transition font-medium mr-2">
+        Limpiar Filtros
+    </a>
+    {% endif %}
     <a href="/project/new" class="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition font-medium">
-        + Crear Primer Proyecto
+        + Crear Proyecto
     </a>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setView(view) {
+    const cardsView = document.getElementById('view-cards');
+    const listView = document.getElementById('view-list');
+    const btnCards = document.getElementById('btn-cards');
+    const btnList = document.getElementById('btn-list');
+
+    if (view === 'cards') {
+        cardsView.classList.remove('hidden');
+        listView.classList.add('hidden');
+        btnCards.classList.add('bg-orange-500', 'text-white');
+        btnCards.classList.remove('text-gray-400');
+        btnList.classList.remove('bg-orange-500', 'text-white');
+        btnList.classList.add('text-gray-400');
+    } else {
+        cardsView.classList.add('hidden');
+        listView.classList.remove('hidden');
+        btnList.classList.add('bg-orange-500', 'text-white');
+        btnList.classList.remove('text-gray-400');
+        btnCards.classList.remove('bg-orange-500', 'text-white');
+        btnCards.classList.add('text-gray-400');
+    }
+
+    localStorage.setItem('dashboardView', view);
+}
+
+// Load saved view preference
+document.addEventListener('DOMContentLoaded', function() {
+    const savedView = localStorage.getItem('dashboardView') || 'cards';
+    setView(savedView);
+});
+</script>
 {% endblock %}

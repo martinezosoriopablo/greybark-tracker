@@ -52,30 +52,6 @@
                 </select>
             </div>
 
-            <!-- Contraparte -->
-            <div>
-                <label class="block text-gray-400 text-sm mb-2">Contraparte (Empresa)</label>
-                <input type="text" name="contraparte"
-                       value="{{ project.contraparte if project else '' }}"
-                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
-            </div>
-
-            <!-- Contacto Nombre -->
-            <div>
-                <label class="block text-gray-400 text-sm mb-2">Nombre Contacto</label>
-                <input type="text" name="contacto_nombre"
-                       value="{{ project.contacto_nombre if project else '' }}"
-                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
-            </div>
-
-            <!-- Contacto Email -->
-            <div>
-                <label class="block text-gray-400 text-sm mb-2">Email Contacto</label>
-                <input type="email" name="contacto_email"
-                       value="{{ project.contacto_email if project else '' }}"
-                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
-            </div>
-
             <!-- Monto Deal -->
             <div>
                 <label class="block text-gray-400 text-sm mb-2">Monto Deal (USD)</label>
@@ -123,6 +99,12 @@
                           class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 resize-none">{{ project.notas if project else '' }}</textarea>
             </div>
         </div>
+
+        {% if not project %}
+        <p class="text-gray-500 text-sm mt-4">
+            Las contrapartes se agregan después de crear el proyecto.
+        </p>
+        {% endif %}
 
         <!-- Submit -->
         <div class="mt-6 flex items-center justify-end space-x-4">

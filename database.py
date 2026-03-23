@@ -34,7 +34,6 @@ MILESTONE_NAMES = [
     "Teaser",
     "Acuerdo Comercial",
     "Reunión Inversionista",
-    "Proyecto",
     "Data Room",
     "Due Diligence",
     "LOI",
@@ -48,9 +47,6 @@ class Project(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str = Field(index=True)
     sector: SectorEnum = Field(default=SectorEnum.OTRO)
-    contraparte: str = Field(default="")
-    contacto_nombre: str = Field(default="")
-    contacto_email: str = Field(default="")
     monto_deal: float = Field(default=0.0)
     fee_pct: float = Field(default=0.0)
     probabilidad: int = Field(default=50, ge=0, le=100)
@@ -64,6 +60,7 @@ class Project(SQLModel, table=True):
     milestones: List["Milestone"] = Relationship(back_populates="project")
     documents: List["Document"] = Relationship(back_populates="project")
     activities: List["Activity"] = Relationship(back_populates="project")
+    contrapartes: List["Contraparte"] = Relationship(back_populates="project")
 
     @property
     def comision_proyectada(self) -> float:
@@ -110,6 +107,19 @@ class Activity(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     project: Optional[Project] = Relationship(back_populates="activities")
+
+
+class Contraparte(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="project.id")
+    nombre_empresa: str
+    contacto_nombre: str = Field(default="")
+    contacto_email: str = Field(default="")
+    contacto_telefono: str = Field(default="")
+    notas: str = Field(default="")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    project: Optional[Project] = Relationship(back_populates="contrapartes")
 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./greybark.db")

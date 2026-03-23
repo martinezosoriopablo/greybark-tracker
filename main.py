@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from database import create_db_and_tables
-from routers import projects, documents, activities, ai_summary, milestones
+from routers import projects, documents, activities, ai_summary, milestones, contrapartes
 
 app = FastAPI(
     title="Greybark Deal Tracker",
@@ -24,6 +24,7 @@ app.include_router(milestones.router)
 app.include_router(documents.router)
 app.include_router(activities.router)
 app.include_router(ai_summary.router)
+app.include_router(contrapartes.router)
 
 
 @app.get("/health")
