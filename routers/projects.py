@@ -37,14 +37,12 @@ def dashboard(
     statement = select(Project).order_by(Project.updated_at.desc())
     projects = session.exec(statement).all()
 
-    # Load relationships and calculate current stage
+    # Load relationships
     for project in projects:
         _ = project.milestones
         _ = project.documents
         _ = project.activities
         _ = project.contrapartes
-        # Add current stage as attribute
-        project.current_stage = get_current_stage(project.milestones)
 
     # Get all unique contrapartes for filter dropdown
     all_contrapartes = session.exec(select(Contraparte)).all()
@@ -65,9 +63,9 @@ def dashboard(
 
     if etapa and etapa != "todos":
         if etapa == "sin_iniciar":
-            projects = [p for p in projects if p.current_stage is None]
+            projects = [p for p in projects if get_current_stage(p.milestones) is None]
         else:
-            projects = [p for p in projects if p.current_stage == etapa]
+            projects = [p for p in projects if get_current_stage(p.milestones) == etapa]
 
     if search:
         search_lower = search.lower()
