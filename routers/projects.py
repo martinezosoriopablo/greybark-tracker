@@ -138,15 +138,20 @@ def project_create(
     request: Request,
     nombre: str = Form(...),
     sector: str = Form(...),
-    monto_deal: float = Form(0.0),
-    fee_pct: float = Form(0.0),
-    probabilidad: int = Form(50),
+    monto_deal: str = Form("0"),
+    fee_pct: str = Form("0"),
+    probabilidad: str = Form("50"),
     estado: str = Form("activo"),
     fecha_inicio: Optional[str] = Form(None),
     fecha_cierre_estimada: Optional[str] = Form(None),
     notas: str = Form(""),
     session: Session = Depends(get_session),
 ):
+    # Parse numeric fields (handle empty strings)
+    monto_deal_float = float(monto_deal) if monto_deal else 0.0
+    fee_pct_float = float(fee_pct) if fee_pct else 0.0
+    probabilidad_int = int(probabilidad) if probabilidad else 50
+
     fecha_inicio_dt = None
     if fecha_inicio:
         try:
@@ -164,9 +169,9 @@ def project_create(
     project = Project(
         nombre=nombre,
         sector=SectorEnum(sector),
-        monto_deal=monto_deal,
-        fee_pct=fee_pct,
-        probabilidad=probabilidad,
+        monto_deal=monto_deal_float,
+        fee_pct=fee_pct_float,
+        probabilidad=probabilidad_int,
         estado=EstadoEnum(estado),
         fecha_inicio=fecha_inicio_dt,
         fecha_cierre_estimada=fecha_cierre_dt,
@@ -265,9 +270,9 @@ def project_update(
     project_id: int,
     nombre: str = Form(...),
     sector: str = Form(...),
-    monto_deal: float = Form(0.0),
-    fee_pct: float = Form(0.0),
-    probabilidad: int = Form(50),
+    monto_deal: str = Form("0"),
+    fee_pct: str = Form("0"),
+    probabilidad: str = Form("50"),
     estado: str = Form("activo"),
     fecha_inicio: Optional[str] = Form(None),
     fecha_cierre_estimada: Optional[str] = Form(None),
@@ -277,6 +282,11 @@ def project_update(
     project = session.get(Project, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    # Parse numeric fields (handle empty strings)
+    monto_deal_float = float(monto_deal) if monto_deal else 0.0
+    fee_pct_float = float(fee_pct) if fee_pct else 0.0
+    probabilidad_int = int(probabilidad) if probabilidad else 50
 
     fecha_inicio_dt = None
     if fecha_inicio:
@@ -294,9 +304,9 @@ def project_update(
 
     project.nombre = nombre
     project.sector = SectorEnum(sector)
-    project.monto_deal = monto_deal
-    project.fee_pct = fee_pct
-    project.probabilidad = probabilidad
+    project.monto_deal = monto_deal_float
+    project.fee_pct = fee_pct_float
+    project.probabilidad = probabilidad_int
     project.estado = EstadoEnum(estado)
     project.fecha_inicio = fecha_inicio_dt
     project.fecha_cierre_estimada = fecha_cierre_dt
