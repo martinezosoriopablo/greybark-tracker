@@ -32,6 +32,28 @@ def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/debug")
+def debug_check():
+    """Debug endpoint to check database tables"""
+    from sqlmodel import Session, select, text
+    from database import engine, Project, Contraparte
+
+    try:
+        with Session(engine) as session:
+            # Check tables exist
+            projects = session.exec(select(Project)).all()
+            contrapartes = session.exec(select(Contraparte)).all()
+
+            return {
+                "status": "ok",
+                "projects_count": len(projects),
+                "contrapartes_count": len(contrapartes),
+                "projects": [p.nombre for p in projects],
+            }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @app.get("/migrate-milestones")
 def migrate_milestones():
     """One-time migration to remove 'Proyecto' milestone from existing projects"""
