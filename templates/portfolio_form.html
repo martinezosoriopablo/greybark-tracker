@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{% if portfolio %}Editar{% else %}Nuevo{% endif %} Portafolio - Greybark Deal Tracker{% endblock %}
+
+{% block content %}
+<!-- Back Button -->
+<div class="mb-6">
+    <a href="{% if portfolio %}/portfolio/{{ portfolio.id }}{% else %}/portfolios{% endif %}" class="text-gray-400 hover:text-orange-500 transition flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        {% if portfolio %}Volver al Portafolio{% else %}Volver a Portafolios{% endif %}
+    </a>
+</div>
+
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6 max-w-2xl">
+    <h1 class="text-2xl font-bold text-white mb-6">
+        {% if portfolio %}Editar Portafolio{% else %}Nuevo Portafolio{% endif %}
+    </h1>
+
+    <form action="{% if portfolio %}/portfolio/{{ portfolio.id }}/edit{% else %}/portfolio/new{% endif %}" method="POST">
+        <div class="space-y-6">
+            <!-- Nombre -->
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Nombre del Portafolio *</label>
+                <input type="text" name="nombre" required
+                       value="{{ portfolio.nombre if portfolio else '' }}"
+                       class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
+            </div>
+
+            <!-- Descripcion -->
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Descripcion</label>
+                <textarea name="descripcion" rows="4"
+                          class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 resize-none">{{ portfolio.descripcion if portfolio else '' }}</textarea>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="mt-6 flex items-center justify-end space-x-4">
+            <a href="{% if portfolio %}/portfolio/{{ portfolio.id }}{% else %}/portfolios{% endif %}"
+               class="text-gray-400 hover:text-white transition px-4 py-2">
+                Cancelar
+            </a>
+            <button type="submit"
+                    class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg transition font-medium">
+                {% if portfolio %}Guardar Cambios{% else %}Crear Portafolio{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

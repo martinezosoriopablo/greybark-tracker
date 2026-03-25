@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ portfolio.nombre }} - Greybark Deal Tracker{% endblock %}
+
+{% block content %}
+<!-- Back Button & Actions -->
+<div class="flex items-center justify-between mb-6">
+    <a href="/portfolios" class="text-gray-400 hover:text-orange-500 transition flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Volver a Portafolios
+    </a>
+    <div class="flex items-center space-x-3">
+        <a href="/portfolio/{{ portfolio.id }}/edit"
+           class="bg-dark-500 hover:bg-dark-400 text-white px-4 py-2 rounded-lg transition">
+            Editar
+        </a>
+        <form action="/portfolio/{{ portfolio.id }}/delete" method="POST" class="inline"
+              onsubmit="return confirm('¿Estás seguro de eliminar este portafolio? Los proyectos NO serán eliminados.')">
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition">
+                Eliminar
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Portfolio Header -->
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6 mb-6">
+    <h1 class="text-2xl font-bold text-white mb-2">{{ portfolio.nombre }}</h1>
+    {% if portfolio.descripcion %}
+    <p class="text-gray-400 mb-4">{{ portfolio.descripcion }}</p>
+    {% endif %}
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-4 pt-4 border-t border-dark-500">
+        <div>
+            <p class="text-gray-500 text-sm">Total Proyectos</p>
+            <p class="text-white font-medium text-lg">{{ projects|length }}</p>
+        </div>
+        <div>
+            <p class="text-gray-500 text-sm">Proyectos Activos</p>
+            <p class="text-green-400 font-medium text-lg">{{ portfolio.proyectos_activos }}</p>
+        </div>
+        <div>
+            <p class="text-gray-500 text-sm">Monto Total</p>
+            <p class="text-white font-medium text-lg">${{ "{:,.0f}".format(portfolio.total_monto) }}</p>
+        </div>
+        <div>
+            <p class="text-gray-500 text-sm">Comision Proyectada</p>
+            <p class="text-orange-400 font-bold text-lg">${{ "{:,.0f}".format(portfolio.total_comision_proyectada) }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add Project to Portfolio -->
+{% if available_projects %}
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6 mb-6">
+    <h2 class="text-lg font-bold text-white mb-4">Agregar Proyecto al Portafolio</h2>
+    <form action="/portfolio/{{ portfolio.id }}/add-project" method="POST" class="flex items-center space-x-4">
+        <select name="project_id" required class="flex-1 bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+            <option value="">Seleccionar proyecto...</option>
+            {% for p in available_projects %}
+            <option value="{{ p.id }}">{{ p.nombre }} - ${{ "{:,.0f}".format(p.monto_deal) }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition">
+            Agregar
+        </button>
+    </form>
+</div>
+{% endif %}
+
+<!-- Projects in Portfolio -->
+<div class="bg-dark-700 rounded-xl border border-dark-500 p-6">
+    <h2 class="text-xl font-bold text-white mb-4">Proyectos del Portafolio</h2>
+
+    {% if projects %}
+    <div class="space-y-4">
+        {% for project in projects %}
+        <div class="bg-dark-600 rounded-lg p-4 flex items-center justify-between">
+            <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-2">
+                    <a href="/project/{{ project.id }}" class="text-white font-medium hover:text-orange-400 transition">
+                        {{ project.nombre }}
+                    </a>
+                    {% if project.estado.value == 'activo' %}
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    {% elif project.estado.value == 'pausa' %}
+                    <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                    {% else %}
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    {% endif %}
+                    <span class="px-2 py-0.5 text-xs rounded bg-dark-500 text-gray-300">{{ project.sector.value | title }}</span>
+                </div>
+                <div class="flex items-center space-x-6 text-sm">
+                    <span class="text-gray-400">Monto: <span class="text-white">${{ "{:,.0f}".format(project.monto_deal) }}</span></span>
+                    <span class="text-gray-400">Comision: <span class="text-orange-400">${{ "{:,.0f}".format(project.comision_proyectada) }}</span></span>
+                    <span class="text-gray-400">Progreso: <span class="text-white">{{ project.hitos_completados }}/10</span></span>
+                </div>
+            </div>
+            <form action="/portfolio/{{ portfolio.id }}/remove-project/{{ project.id }}" method="POST" class="inline"
+                  onsubmit="return confirm('¿Quitar este proyecto del portafolio?')">
+                <button type="submit" class="text-gray-400 hover:text-red-400 text-sm transition">
+                    Quitar
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500 text-center py-8">No hay proyectos en este portafolio. Agrega proyectos existentes usando el selector de arriba.</p>
+    {% endif %}
+</div>
+{% endblock %}

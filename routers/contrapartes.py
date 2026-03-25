@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
-from database import Contraparte, Activity, get_session
+from database import Contraparte, Activity, TipoContraparteEnum, get_session
 
 router = APIRouter(prefix="/api/contrapartes", tags=["contrapartes"])
 
@@ -10,6 +10,7 @@ router = APIRouter(prefix="/api/contrapartes", tags=["contrapartes"])
 @router.post("/add")
 def add_contraparte(
     project_id: int = Form(...),
+    tipo: str = Form("inversionista"),
     nombre_empresa: str = Form(...),
     contacto_nombre: str = Form(""),
     contacto_email: str = Form(""),
@@ -19,6 +20,7 @@ def add_contraparte(
 ):
     contraparte = Contraparte(
         project_id=project_id,
+        tipo=TipoContraparteEnum(tipo),
         nombre_empresa=nombre_empresa,
         contacto_nombre=contacto_nombre,
         contacto_email=contacto_email,

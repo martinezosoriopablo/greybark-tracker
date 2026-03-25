@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 
 from database import (
-    Project, Milestone, Document, Activity, Contraparte,
+    Project, Milestone, Document, Activity, Contraparte, Portfolio,
     get_session, create_milestones_for_project,
     SectorEnum, EstadoEnum, MILESTONE_NAMES
 )
@@ -121,7 +121,11 @@ def dashboard(
 
 
 @router.get("/project/new")
-def project_form_new(request: Request):
+def project_form_new(
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    portfolios = session.exec(select(Portfolio)).all()
     return templates.TemplateResponse(
         "project_form.html",
         {
@@ -129,6 +133,7 @@ def project_form_new(request: Request):
             "project": None,
             "sectores": SectorEnum,
             "estados": EstadoEnum,
+            "portfolios": portfolios,
         }
     )
 
@@ -138,6 +143,7 @@ def project_create(
     request: Request,
     nombre: str = Form(...),
     sector: str = Form(...),
+    portfolio_id: str = Form(""),
     monto_deal: str = Form("0"),
     fee_pct: str = Form("0"),
     probabilidad: str = Form("50"),
@@ -151,6 +157,7 @@ def project_create(
     monto_deal_float = float(monto_deal) if monto_deal else 0.0
     fee_pct_float = float(fee_pct) if fee_pct else 0.0
     probabilidad_int = int(probabilidad) if probabilidad else 50
+    portfolio_id_int = int(portfolio_id) if portfolio_id else None
 
     fecha_inicio_dt = None
     if fecha_inicio:
@@ -169,6 +176,7 @@ def project_create(
     project = Project(
         nombre=nombre,
         sector=SectorEnum(sector),
+        portfolio_id=portfolio_id_int,
         monto_deal=monto_deal_float,
         fee_pct=fee_pct_float,
         probabilidad=probabilidad_int,
@@ -253,6 +261,8 @@ def project_form_edit(
     if not project:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
+    portfolios = session.exec(select(Portfolio)).all()
+
     return templates.TemplateResponse(
         "project_form.html",
         {
@@ -260,6 +270,7 @@ def project_form_edit(
             "project": project,
             "sectores": SectorEnum,
             "estados": EstadoEnum,
+            "portfolios": portfolios,
         }
     )
 
@@ -270,6 +281,7 @@ def project_update(
     project_id: int,
     nombre: str = Form(...),
     sector: str = Form(...),
+    portfolio_id: str = Form(""),
     monto_deal: str = Form("0"),
     fee_pct: str = Form("0"),
     probabilidad: str = Form("50"),
@@ -287,6 +299,7 @@ def project_update(
     monto_deal_float = float(monto_deal) if monto_deal else 0.0
     fee_pct_float = float(fee_pct) if fee_pct else 0.0
     probabilidad_int = int(probabilidad) if probabilidad else 50
+    portfolio_id_int = int(portfolio_id) if portfolio_id else None
 
     fecha_inicio_dt = None
     if fecha_inicio:
@@ -304,6 +317,7 @@ def project_update(
 
     project.nombre = nombre
     project.sector = SectorEnum(sector)
+    project.portfolio_id = portfolio_id_int
     project.monto_deal = monto_deal_float
     project.fee_pct = fee_pct_float
     project.probabilidad = probabilidad_int

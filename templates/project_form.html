@@ -40,6 +40,19 @@
                 </select>
             </div>
 
+            <!-- Portafolio -->
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Portafolio (opcional)</label>
+                <select name="portfolio_id" class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
+                    <option value="">Sin portafolio (individual)</option>
+                    {% for portfolio in portfolios %}
+                    <option value="{{ portfolio.id }}" {% if project and project.portfolio_id == portfolio.id %}selected{% endif %}>
+                        {{ portfolio.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <!-- Estado -->
             <div>
                 <label class="block text-gray-400 text-sm mb-2">Estado</label>

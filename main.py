@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from database import create_db_and_tables
-from routers import projects, documents, activities, ai_summary, milestones, contrapartes
+from routers import projects, documents, activities, ai_summary, milestones, contrapartes, portfolios
 
 app = FastAPI(
     title="Greybark Deal Tracker",
@@ -20,6 +20,7 @@ def on_startup():
 
 
 app.include_router(projects.router)
+app.include_router(portfolios.router)
 app.include_router(milestones.router)
 app.include_router(documents.router)
 app.include_router(activities.router)

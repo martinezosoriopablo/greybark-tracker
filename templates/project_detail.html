@@ -95,8 +95,12 @@
 
     <!-- Add Contraparte Form -->
     <form action="/api/contrapartes/add" method="POST" class="mb-6 p-4 bg-dark-600 rounded-lg">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <input type="hidden" name="project_id" value="{{ project.id }}">
+            <select name="tipo" class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+                <option value="inversionista">Inversionista</option>
+                <option value="broker">Broker</option>
+            </select>
             <input type="text" name="nombre_empresa" placeholder="Empresa *" required
                    class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             <input type="text" name="contacto_nombre" placeholder="Nombre contacto"
@@ -117,7 +121,12 @@
         {% for cp in contrapartes %}
         <div class="bg-dark-600 rounded-lg p-4 flex items-center justify-between">
             <div class="flex-1">
-                <p class="text-white font-medium">{{ cp.nombre_empresa }}</p>
+                <div class="flex items-center space-x-3">
+                    <p class="text-white font-medium">{{ cp.nombre_empresa }}</p>
+                    <span class="px-2 py-0.5 text-xs rounded-full {% if cp.tipo.value == 'inversionista' %}bg-green-500/20 text-green-400{% else %}bg-blue-500/20 text-blue-400{% endif %}">
+                        {{ cp.tipo.value | title }}
+                    </span>
+                </div>
                 <div class="flex items-center space-x-4 text-sm text-gray-400 mt-1">
                     {% if cp.contacto_nombre %}
                     <span>{{ cp.contacto_nombre }}</span>

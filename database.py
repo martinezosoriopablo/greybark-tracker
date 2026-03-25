@@ -29,6 +29,11 @@ class TipoDocumentoEnum(str, Enum):
     OTRO = "otro"
 
 
+class TipoContraparteEnum(str, Enum):
+    INVERSIONISTA = "inversionista"
+    BROKER = "broker"
+
+
 MILESTONE_NAMES = [
     "NDA",
     "Teaser",
@@ -43,10 +48,33 @@ MILESTONE_NAMES = [
 ]
 
 
+class Portfolio(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    nombre: str = Field(index=True)
+    descripcion: str = Field(default="")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    projects: List["Project"] = Relationship(back_populates="portfolio")
+
+    @property
+    def total_monto(self) -> float:
+        return sum(p.monto_deal for p in self.projects)
+
+    @property
+    def total_comision_proyectada(self) -> float:
+        return sum(p.comision_proyectada for p in self.projects)
+
+    @property
+    def proyectos_activos(self) -> int:
+        return sum(1 for p in self.projects if p.estado == EstadoEnum.ACTIVO)
+
+
 class Project(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str = Field(index=True)
     sector: SectorEnum = Field(default=SectorEnum.OTRO)
+    portfolio_id: Optional[int] = Field(default=None, foreign_key="portfolio.id")
     monto_deal: float = Field(default=0.0)
     fee_pct: float = Field(default=0.0)
     probabilidad: int = Field(default=50, ge=0, le=100)
@@ -57,6 +85,7 @@ class Project(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+    portfolio: Optional[Portfolio] = Relationship(back_populates="projects")
     milestones: List["Milestone"] = Relationship(back_populates="project")
     documents: List["Document"] = Relationship(back_populates="project")
     activities: List["Activity"] = Relationship(back_populates="project")
@@ -112,6 +141,7 @@ class Activity(SQLModel, table=True):
 class Contraparte(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
+    tipo: TipoContraparteEnum = Field(default=TipoContraparteEnum.INVERSIONISTA)
     nombre_empresa: str
     contacto_nombre: str = Field(default="")
     contacto_email: str = Field(default="")
