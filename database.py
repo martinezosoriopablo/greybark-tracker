@@ -141,7 +141,7 @@ class Activity(SQLModel, table=True):
 class Contraparte(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     project_id: int = Field(foreign_key="project.id")
-    tipo: TipoContraparteEnum = Field(default=TipoContraparteEnum.INVERSIONISTA)
+    tipo: str = Field(default="inversionista")  # "inversionista" o "broker"
     nombre_empresa: str
     contacto_nombre: str = Field(default="")
     contacto_email: str = Field(default="")

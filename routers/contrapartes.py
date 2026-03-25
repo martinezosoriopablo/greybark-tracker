@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
-from database import Contraparte, Activity, TipoContraparteEnum, get_session
+from database import Contraparte, Activity, get_session
 
 router = APIRouter(prefix="/api/contrapartes", tags=["contrapartes"])
 
@@ -20,7 +20,7 @@ def add_contraparte(
 ):
     contraparte = Contraparte(
         project_id=project_id,
-        tipo=TipoContraparteEnum(tipo),
+        tipo=tipo,
         nombre_empresa=nombre_empresa,
         contacto_nombre=contacto_nombre,
         contacto_email=contacto_email,

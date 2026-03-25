@@ -123,8 +123,8 @@
             <div class="flex-1">
                 <div class="flex items-center space-x-3">
                     <p class="text-white font-medium">{{ cp.nombre_empresa }}</p>
-                    <span class="px-2 py-0.5 text-xs rounded-full {% if cp.tipo.value == 'inversionista' %}bg-green-500/20 text-green-400{% else %}bg-blue-500/20 text-blue-400{% endif %}">
-                        {{ cp.tipo.value | title }}
+                    <span class="px-2 py-0.5 text-xs rounded-full {% if cp.tipo == 'inversionista' %}bg-green-500/20 text-green-400{% else %}bg-blue-500/20 text-blue-400{% endif %}">
+                        {{ cp.tipo | title }}
                     </span>
                 </div>
                 <div class="flex items-center space-x-4 text-sm text-gray-400 mt-1">
