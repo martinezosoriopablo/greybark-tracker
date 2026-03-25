@@ -32,92 +32,99 @@ def dashboard(
     contraparte: Optional[str] = Query(None),
     etapa: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    debug: Optional[str] = Query(None),
     session: Session = Depends(get_session)
 ):
-    statement = select(Project).order_by(Project.updated_at.desc())
-    projects = session.exec(statement).all()
+    try:
+        statement = select(Project).order_by(Project.updated_at.desc())
+        projects = session.exec(statement).all()
 
-    # Load relationships
-    for project in projects:
-        _ = project.milestones
-        _ = project.documents
-        _ = project.activities
-        _ = project.contrapartes
+        # Load relationships
+        for project in projects:
+            _ = project.milestones
+            _ = project.documents
+            _ = project.activities
+            _ = project.contrapartes
 
-    # Get all unique contrapartes for filter dropdown
-    all_contrapartes = session.exec(select(Contraparte)).all()
-    unique_contrapartes = sorted(set(c.nombre_empresa for c in all_contrapartes))
+        # Get all unique contrapartes for filter dropdown
+        all_contrapartes = session.exec(select(Contraparte)).all()
+        unique_contrapartes = sorted(set(c.nombre_empresa for c in all_contrapartes))
 
-    # Apply filters
-    if sector and sector != "todos":
-        projects = [p for p in projects if p.sector.value == sector]
+        # Apply filters
+        if sector and sector != "todos":
+            projects = [p for p in projects if p.sector.value == sector]
 
-    if estado and estado != "todos":
-        projects = [p for p in projects if p.estado.value == estado]
+        if estado and estado != "todos":
+            projects = [p for p in projects if p.estado.value == estado]
 
-    if contraparte and contraparte != "todos":
-        projects = [
-            p for p in projects
-            if any(c.nombre_empresa == contraparte for c in p.contrapartes)
-        ]
+        if contraparte and contraparte != "todos":
+            projects = [
+                p for p in projects
+                if any(c.nombre_empresa == contraparte for c in p.contrapartes)
+            ]
 
-    if etapa and etapa != "todos":
-        if etapa == "sin_iniciar":
-            projects = [p for p in projects if get_current_stage(p.milestones) is None]
-        else:
-            projects = [p for p in projects if get_current_stage(p.milestones) == etapa]
+        if etapa and etapa != "todos":
+            if etapa == "sin_iniciar":
+                projects = [p for p in projects if get_current_stage(p.milestones) is None]
+            else:
+                projects = [p for p in projects if get_current_stage(p.milestones) == etapa]
 
-    if search:
-        search_lower = search.lower()
-        projects = [
-            p for p in projects
-            if search_lower in p.nombre.lower()
-            or any(search_lower in c.nombre_empresa.lower() for c in p.contrapartes)
-        ]
+        if search:
+            search_lower = search.lower()
+            projects = [
+                p for p in projects
+                if search_lower in p.nombre.lower()
+                or any(search_lower in c.nombre_empresa.lower() for c in p.contrapartes)
+            ]
 
-    # Calculate KPIs (from all projects, not filtered)
-    all_projects = session.exec(select(Project)).all()
-    for p in all_projects:
-        _ = p.milestones
+        # Calculate KPIs (from all projects, not filtered)
+        all_projects = session.exec(select(Project)).all()
+        for p in all_projects:
+            _ = p.milestones
 
-    activos = [p for p in all_projects if p.estado == EstadoEnum.ACTIVO]
-    total_activos = len(activos)
+        activos = [p for p in all_projects if p.estado == EstadoEnum.ACTIVO]
+        total_activos = len(activos)
 
-    pipeline_ponderado = sum(p.comision_proyectada for p in activos)
+        pipeline_ponderado = sum(p.comision_proyectada for p in activos)
 
-    closing_termsheet = sum(
-        1 for p in all_projects
-        if p.estado == EstadoEnum.ACTIVO and any(
-            m.completado and m.nombre in ["Term Sheet", "Closing"]
-            for m in p.milestones
+        closing_termsheet = sum(
+            1 for p in all_projects
+            if p.estado == EstadoEnum.ACTIVO and any(
+                m.completado and m.nombre in ["Term Sheet", "Closing"]
+                for m in p.milestones
+            )
         )
-    )
 
-    cerrados = [p for p in all_projects if p.estado == EstadoEnum.CERRADO]
-    comision_cerrados = sum(
-        p.monto_deal * (p.fee_pct / 100) for p in cerrados
-    )
+        cerrados = [p for p in all_projects if p.estado == EstadoEnum.CERRADO]
+        comision_cerrados = sum(
+            p.monto_deal * (p.fee_pct / 100) for p in cerrados
+        )
 
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
-            "projects": projects,
-            "total_activos": total_activos,
-            "pipeline_ponderado": pipeline_ponderado,
-            "closing_termsheet": closing_termsheet,
-            "comision_cerrados": comision_cerrados,
-            "sectores": SectorEnum,
-            "estados": EstadoEnum,
-            "contrapartes_list": unique_contrapartes,
-            "etapas_list": MILESTONE_NAMES,
-            "filter_sector": sector or "todos",
-            "filter_estado": estado or "todos",
-            "filter_contraparte": contraparte or "todos",
-            "filter_etapa": etapa or "todos",
-            "filter_search": search or "",
-        }
-    )
+        return templates.TemplateResponse(
+            "dashboard.html",
+            {
+                "request": request,
+                "projects": projects,
+                "total_activos": total_activos,
+                "pipeline_ponderado": pipeline_ponderado,
+                "closing_termsheet": closing_termsheet,
+                "comision_cerrados": comision_cerrados,
+                "sectores": SectorEnum,
+                "estados": EstadoEnum,
+                "contrapartes_list": unique_contrapartes,
+                "etapas_list": MILESTONE_NAMES,
+                "filter_sector": sector or "todos",
+                "filter_estado": estado or "todos",
+                "filter_contraparte": contraparte or "todos",
+                "filter_etapa": etapa or "todos",
+                "filter_search": search or "",
+            }
+        )
+    except Exception as e:
+        if debug:
+            import traceback
+            return {"error": str(e), "traceback": traceback.format_exc()}
+        raise
 
 
 @router.get("/project/new")
