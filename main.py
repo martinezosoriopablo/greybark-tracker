@@ -55,6 +55,36 @@ def debug_check():
         return {"status": "error", "message": str(e)}
 
 
+@app.get("/debug-dashboard")
+def debug_dashboard():
+    """Debug endpoint to test dashboard"""
+    from sqlmodel import Session, select
+    from database import engine, Project, Contraparte, Portfolio
+
+    try:
+        with Session(engine) as session:
+            projects = session.exec(select(Project)).all()
+
+            # Test loading relationships
+            for p in projects:
+                _ = p.milestones
+                _ = p.contrapartes
+                _ = p.portfolio
+
+            contrapartes = session.exec(select(Contraparte)).all()
+            portfolios = session.exec(select(Portfolio)).all()
+
+            return {
+                "status": "ok",
+                "projects": len(projects),
+                "contrapartes": len(contrapartes),
+                "portfolios": len(portfolios),
+            }
+    except Exception as e:
+        import traceback
+        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
+
+
 @app.get("/debug-create")
 def debug_create():
     """Debug endpoint to test project creation"""
