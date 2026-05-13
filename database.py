@@ -34,6 +34,12 @@ class TipoContraparteEnum(str, Enum):
     BROKER = "broker"
 
 
+class TaskStatusEnum(str, Enum):
+    PENDIENTE = "pendiente"
+    EN_CURSO = "en_curso"
+    COMPLETADA = "completada"
+
+
 MILESTONE_NAMES = [
     "NDA",
     "Teaser",
@@ -90,6 +96,7 @@ class Project(SQLModel, table=True):
     documents: List["Document"] = Relationship(back_populates="project")
     activities: List["Activity"] = Relationship(back_populates="project")
     contrapartes: List["Contraparte"] = Relationship(back_populates="project")
+    tasks: List["Task"] = Relationship(back_populates="project")
 
     @property
     def comision_proyectada(self) -> float:
@@ -136,6 +143,19 @@ class Activity(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     project: Optional[Project] = Relationship(back_populates="activities")
+
+
+class Task(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    project_id: int = Field(foreign_key="project.id")
+    nombre: str
+    status: TaskStatusEnum = Field(default=TaskStatusEnum.PENDIENTE)
+    encargado: str = Field(default="")
+    fecha_limite: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: Optional[datetime] = Field(default=None)
+
+    project: Optional[Project] = Relationship(back_populates="tasks")
 
 
 class Contraparte(SQLModel, table=True):

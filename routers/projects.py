@@ -7,9 +7,9 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 
 from database import (
-    Project, Milestone, Document, Activity, Contraparte, Portfolio,
+    Project, Milestone, Document, Activity, Contraparte, Portfolio, Task,
     get_session, create_milestones_for_project,
-    SectorEnum, EstadoEnum, MILESTONE_NAMES
+    SectorEnum, EstadoEnum, TaskStatusEnum, MILESTONE_NAMES
 )
 
 router = APIRouter()
@@ -242,6 +242,17 @@ def project_detail(
         .order_by(Contraparte.created_at.desc())
     ).all()
 
+    tasks = session.exec(
+        select(Task)
+        .where(Task.project_id == project_id)
+        .order_by(
+            Task.status,
+            Task.fecha_limite.is_(None),
+            Task.fecha_limite,
+            Task.created_at.desc(),
+        )
+    ).all()
+
     from database import TipoDocumentoEnum
 
     return templates.TemplateResponse(
@@ -253,7 +264,9 @@ def project_detail(
             "documents": documents,
             "activities": activities,
             "contrapartes": contrapartes,
+            "tasks": tasks,
             "tipos_documento": TipoDocumentoEnum,
+            "task_statuses": TaskStatusEnum,
         }
     )
 
@@ -383,6 +396,13 @@ def project_delete(
     ).all()
     for c in contrapartes:
         session.delete(c)
+
+    # Delete tasks
+    project_tasks = session.exec(
+        select(Task).where(Task.project_id == project_id)
+    ).all()
+    for t in project_tasks:
+        session.delete(t)
 
     session.delete(project)
     session.commit()
