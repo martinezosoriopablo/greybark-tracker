@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
-from database import Milestone, Activity, get_session
+from database import Milestone, get_session
 
 router = APIRouter(prefix="/api/milestones", tags=["milestones"])
 
@@ -27,14 +27,6 @@ def toggle_milestone(
     session.add(milestone)
     session.commit()
     session.refresh(milestone)
-
-    action = "completado" if milestone.completado else "desmarcado"
-    activity = Activity(
-        project_id=milestone.project_id,
-        descripcion=f"Hito {action}: {milestone.nombre}"
-    )
-    session.add(activity)
-    session.commit()
 
     return {
         "completado": milestone.completado,

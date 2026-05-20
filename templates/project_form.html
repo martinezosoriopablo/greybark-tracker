@@ -40,17 +40,31 @@
                 </select>
             </div>
 
+            <!-- Tipo de financiamiento -->
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Tipo de financiamiento</label>
+                <select name="tipo_financiamiento" class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
+                    <option value="">Sin definir</option>
+                    {% for tf in tipos_financiamiento %}
+                    <option value="{{ tf.value }}" {% if project and project.tipo_financiamiento and project.tipo_financiamiento.value == tf.value %}selected{% endif %}>
+                        {{ tf.value | title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <!-- Portafolio -->
             <div>
                 <label class="block text-gray-400 text-sm mb-2">Portafolio (opcional)</label>
                 <select name="portfolio_id" class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
-                    <option value="">Sin portafolio (individual)</option>
+                    <option value="">Proyecto individual (sin portafolio)</option>
                     {% for portfolio in portfolios %}
                     <option value="{{ portfolio.id }}" {% if project and project.portfolio_id == portfolio.id %}selected{% endif %}>
                         {{ portfolio.nombre }}
                     </option>
                     {% endfor %}
                 </select>
+                <p class="text-gray-500 text-xs mt-1">Un portafolio puede agrupar varios proyectos.</p>
             </div>
 
             <!-- Estado -->
@@ -83,9 +97,9 @@
 
             <!-- Probabilidad -->
             <div>
-                <label class="block text-gray-400 text-sm mb-2">Probabilidad (%)</label>
-                <input type="number" name="probabilidad" min="0" max="100"
-                       value="{{ project.probabilidad if project else '50' }}"
+                <label class="block text-gray-400 text-sm mb-2">Probabilidad de cierre (%) — opcional</label>
+                <input type="number" name="probabilidad" min="0" max="100" placeholder="Dejar vacío si no aplica"
+                       value="{{ project.probabilidad if project and project.probabilidad is not none else '' }}"
                        class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
             </div>
 
@@ -99,10 +113,11 @@
 
             <!-- Fecha Cierre Estimada -->
             <div>
-                <label class="block text-gray-400 text-sm mb-2">Fecha Cierre Estimada</label>
+                <label class="block text-gray-400 text-sm mb-2">Fecha Cierre Estimada — opcional</label>
                 <input type="date" name="fecha_cierre_estimada"
                        value="{{ project.fecha_cierre_estimada.strftime('%Y-%m-%d') if project and project.fecha_cierre_estimada else '' }}"
                        class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
+                <p class="text-gray-500 text-xs mt-1">Dejar vacío si la fecha aún es incierta.</p>
             </div>
 
             <!-- Notas -->

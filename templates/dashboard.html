@@ -187,8 +187,9 @@
                     <span class="text-sm text-gray-400">{{ project.hitos_completados }}/10</span>
                 </div>
                 <div class="flex items-center space-x-1">
+                    {% set ordered = project.milestones_ordenados %}
                     {% for i in range(10) %}
-                    {% set milestone = project.milestones[i] if i < project.milestones|length else none %}
+                    {% set milestone = ordered[i] if i < ordered|length else none %}
                     <div class="flex-1 h-2 rounded-full {% if milestone and milestone.completado %}bg-orange-500{% else %}bg-dark-500{% endif %}"></div>
                     {% endfor %}
                 </div>
@@ -280,8 +281,9 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center space-x-2">
                             <div class="flex space-x-0.5 w-24">
+                                {% set ordered = project.milestones_ordenados %}
                                 {% for i in range(10) %}
-                                {% set milestone = project.milestones[i] if i < project.milestones|length else none %}
+                                {% set milestone = ordered[i] if i < ordered|length else none %}
                                 <div class="flex-1 h-2 rounded-full {% if milestone and milestone.completado %}bg-orange-500{% else %}bg-dark-500{% endif %}"></div>
                                 {% endfor %}
                             </div>

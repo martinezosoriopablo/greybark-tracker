@@ -32,6 +32,13 @@ class TipoDocumentoEnum(str, Enum):
 class TipoContraparteEnum(str, Enum):
     INVERSIONISTA = "inversionista"
     BROKER = "broker"
+    AMBOS = "ambos"
+
+
+class TipoFinanciamientoEnum(str, Enum):
+    DEUDA = "deuda"
+    EQUITY = "equity"
+    MIXTO = "mixto"
 
 
 class TaskStatusEnum(str, Enum):
@@ -80,10 +87,11 @@ class Project(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str = Field(index=True)
     sector: SectorEnum = Field(default=SectorEnum.OTRO)
+    tipo_financiamiento: Optional[TipoFinanciamientoEnum] = Field(default=None)
     portfolio_id: Optional[int] = Field(default=None, foreign_key="portfolio.id")
     monto_deal: float = Field(default=0.0)
     fee_pct: float = Field(default=0.0)
-    probabilidad: int = Field(default=50, ge=0, le=100)
+    probabilidad: Optional[int] = Field(default=None, ge=0, le=100)
     estado: EstadoEnum = Field(default=EstadoEnum.ACTIVO)
     fecha_inicio: Optional[datetime] = Field(default=None)
     fecha_cierre_estimada: Optional[datetime] = Field(default=None)
@@ -94,17 +102,23 @@ class Project(SQLModel, table=True):
     portfolio: Optional[Portfolio] = Relationship(back_populates="projects")
     milestones: List["Milestone"] = Relationship(back_populates="project")
     documents: List["Document"] = Relationship(back_populates="project")
-    activities: List["Activity"] = Relationship(back_populates="project")
     contrapartes: List["Contraparte"] = Relationship(back_populates="project")
     tasks: List["Task"] = Relationship(back_populates="project")
 
     @property
     def comision_proyectada(self) -> float:
-        return self.monto_deal * (self.fee_pct / 100) * (self.probabilidad / 100)
+        base = self.monto_deal * (self.fee_pct / 100)
+        if self.probabilidad is None:
+            return base
+        return base * (self.probabilidad / 100)
 
     @property
     def hitos_completados(self) -> int:
         return sum(1 for m in self.milestones if m.completado)
+
+    @property
+    def milestones_ordenados(self) -> List["Milestone"]:
+        return sorted(self.milestones, key=lambda m: m.orden)
 
     @property
     def dias_restantes(self) -> Optional[int]:
@@ -136,13 +150,12 @@ class Document(SQLModel, table=True):
     project: Optional[Project] = Relationship(back_populates="documents")
 
 
-class Activity(SQLModel, table=True):
+class Encargado(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    project_id: int = Field(foreign_key="project.id")
-    descripcion: str
+    nombre: str = Field(index=True)
+    email: str = Field(default="")
+    activo: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-
-    project: Optional[Project] = Relationship(back_populates="activities")
 
 
 class Task(SQLModel, table=True):

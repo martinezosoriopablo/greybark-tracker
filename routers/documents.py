@@ -1,10 +1,8 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
-from database import Document, Activity, get_session, TipoDocumentoEnum
+from database import Document, get_session, TipoDocumentoEnum
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
@@ -26,13 +24,6 @@ def add_document(
     session.add(document)
     session.commit()
 
-    activity = Activity(
-        project_id=project_id,
-        descripcion=f"Documento agregado: {nombre}"
-    )
-    session.add(activity)
-    session.commit()
-
     return RedirectResponse(url=f"/project/{project_id}", status_code=303)
 
 
@@ -46,16 +37,8 @@ def delete_document(
         raise HTTPException(status_code=404, detail="Documento no encontrado")
 
     project_id = document.project_id
-    doc_nombre = document.nombre
 
     session.delete(document)
-    session.commit()
-
-    activity = Activity(
-        project_id=project_id,
-        descripcion=f"Documento eliminado: {doc_nombre}"
-    )
-    session.add(activity)
     session.commit()
 
     return RedirectResponse(url=f"/project/{project_id}", status_code=303)

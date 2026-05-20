@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from database import create_db_and_tables
-from routers import projects, documents, activities, ai_summary, milestones, contrapartes, portfolios, tasks
+from routers import projects, documents, milestones, contrapartes, portfolios, tasks, encargados
 
 app = FastAPI(
     title="Greybark Deal Tracker",
@@ -23,10 +23,9 @@ app.include_router(projects.router)
 app.include_router(portfolios.router)
 app.include_router(milestones.router)
 app.include_router(documents.router)
-app.include_router(activities.router)
-app.include_router(ai_summary.router)
 app.include_router(contrapartes.router)
 app.include_router(tasks.router)
+app.include_router(encargados.router)
 
 
 @app.get("/health")
@@ -86,40 +85,74 @@ def debug_dashboard():
         return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
 
 
-@app.get("/debug-create")
-def debug_create():
-    """Debug endpoint to test project creation"""
-    from sqlmodel import Session
-    from database import engine, Project, Activity, SectorEnum, EstadoEnum, create_milestones_for_project
+@app.get("/migrate-v2")
+def migrate_v2():
+    """Migración idempotente para el schema v2.
 
-    try:
-        with Session(engine) as session:
-            project = Project(
-                nombre="TEST DEBUG",
-                sector=SectorEnum.OTRO,
-                monto_deal=1000.0,
-                fee_pct=2.0,
-                probabilidad=50,
-                estado=EstadoEnum.ACTIVO,
-                notas="Test project",
+    Postgres (Supabase):
+      - Agrega project.tipo_financiamiento (nullable VARCHAR).
+      - Hace project.probabilidad nullable.
+      - Hace nullable las columnas legacy (contraparte, contacto_nombre, contacto_email).
+      - Crea tabla encargado si no existe.
+
+    SQLite: agrega project.tipo_financiamiento y crea tabla encargado.
+    Para hacer nullable las columnas existentes en SQLite hay que recrear la tabla
+    (ver script en /Users/pablomartinez/greybark-tracker para la copia local).
+    """
+    from sqlalchemy import text
+    from database import engine
+
+    results = []
+    dialect = engine.dialect.name
+
+    def run(sql: str, label: str):
+        try:
+            with engine.begin() as conn:
+                conn.execute(text(sql))
+            results.append(f"OK: {label}")
+        except Exception as e:
+            results.append(f"SKIP {label}: {type(e).__name__}: {str(e).splitlines()[0]}")
+
+    if dialect == "postgresql":
+        run(
+            "ALTER TABLE project ADD COLUMN IF NOT EXISTS tipo_financiamiento VARCHAR",
+            "project.tipo_financiamiento agregada",
+        )
+        run(
+            "ALTER TABLE project ALTER COLUMN probabilidad DROP NOT NULL",
+            "project.probabilidad nullable",
+        )
+        for col in ("contraparte", "contacto_nombre", "contacto_email"):
+            run(
+                f"ALTER TABLE project ALTER COLUMN {col} DROP NOT NULL",
+                f"project.{col} nullable (legacy)",
             )
-            session.add(project)
-            session.commit()
-            session.refresh(project)
+        run(
+            "CREATE TABLE IF NOT EXISTS encargado ("
+            "id SERIAL PRIMARY KEY, "
+            "nombre VARCHAR NOT NULL, "
+            "email VARCHAR NOT NULL DEFAULT '', "
+            "activo BOOLEAN NOT NULL DEFAULT TRUE, "
+            "created_at TIMESTAMP NOT NULL DEFAULT NOW())",
+            "tabla encargado",
+        )
+    else:
+        run(
+            "ALTER TABLE project ADD COLUMN tipo_financiamiento VARCHAR",
+            "project.tipo_financiamiento agregada",
+        )
+        run(
+            "CREATE TABLE IF NOT EXISTS encargado ("
+            "id INTEGER PRIMARY KEY, "
+            "nombre VARCHAR NOT NULL, "
+            "email VARCHAR NOT NULL DEFAULT '', "
+            "activo BOOLEAN NOT NULL DEFAULT 1, "
+            "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)",
+            "tabla encargado",
+        )
+        results.append("NOTA sqlite: para columnas legacy/probabilidad nullable, recrear tabla project manualmente.")
 
-            create_milestones_for_project(session, project.id)
-
-            activity = Activity(
-                project_id=project.id,
-                descripcion="Proyecto creado"
-            )
-            session.add(activity)
-            session.commit()
-
-            return {"status": "ok", "project_id": project.id, "nombre": project.nombre}
-    except Exception as e:
-        import traceback
-        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
+    return {"status": "complete", "dialect": dialect, "results": results}
 
 
 @app.get("/migrate-milestones")

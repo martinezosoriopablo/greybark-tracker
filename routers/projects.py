@@ -7,9 +7,9 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 
 from database import (
-    Project, Milestone, Document, Activity, Contraparte, Portfolio, Task,
+    Project, Milestone, Document, Contraparte, Portfolio, Task, Encargado,
     get_session, create_milestones_for_project,
-    SectorEnum, EstadoEnum, TaskStatusEnum, MILESTONE_NAMES
+    SectorEnum, EstadoEnum, TaskStatusEnum, TipoFinanciamientoEnum, MILESTONE_NAMES
 )
 
 router = APIRouter()
@@ -43,7 +43,6 @@ def dashboard(
         for project in projects:
             _ = project.milestones
             _ = project.documents
-            _ = project.activities
             _ = project.contrapartes
 
         # Get all unique contrapartes for filter dropdown
@@ -132,7 +131,7 @@ def project_form_new(
     request: Request,
     session: Session = Depends(get_session),
 ):
-    portfolios = session.exec(select(Portfolio)).all()
+    portfolios = session.exec(select(Portfolio).order_by(Portfolio.nombre)).all()
     return templates.TemplateResponse(
         "project_form.html",
         {
@@ -140,6 +139,7 @@ def project_form_new(
             "project": None,
             "sectores": SectorEnum,
             "estados": EstadoEnum,
+            "tipos_financiamiento": TipoFinanciamientoEnum,
             "portfolios": portfolios,
         }
     )
@@ -150,21 +150,22 @@ def project_create(
     request: Request,
     nombre: str = Form(...),
     sector: str = Form(...),
+    tipo_financiamiento: str = Form(""),
     portfolio_id: str = Form(""),
     monto_deal: str = Form("0"),
     fee_pct: str = Form("0"),
-    probabilidad: str = Form("50"),
+    probabilidad: str = Form(""),
     estado: str = Form("activo"),
     fecha_inicio: Optional[str] = Form(None),
     fecha_cierre_estimada: Optional[str] = Form(None),
     notas: str = Form(""),
     session: Session = Depends(get_session),
 ):
-    # Parse numeric fields (handle empty strings)
     monto_deal_float = float(monto_deal) if monto_deal else 0.0
     fee_pct_float = float(fee_pct) if fee_pct else 0.0
-    probabilidad_int = int(probabilidad) if probabilidad else 50
+    probabilidad_int = int(probabilidad) if probabilidad not in (None, "") else None
     portfolio_id_int = int(portfolio_id) if portfolio_id else None
+    tipo_fin = TipoFinanciamientoEnum(tipo_financiamiento) if tipo_financiamiento else None
 
     fecha_inicio_dt = None
     if fecha_inicio:
@@ -183,6 +184,7 @@ def project_create(
     project = Project(
         nombre=nombre,
         sector=SectorEnum(sector),
+        tipo_financiamiento=tipo_fin,
         portfolio_id=portfolio_id_int,
         monto_deal=monto_deal_float,
         fee_pct=fee_pct_float,
@@ -197,13 +199,6 @@ def project_create(
     session.refresh(project)
 
     create_milestones_for_project(session, project.id)
-
-    activity = Activity(
-        project_id=project.id,
-        descripcion="Proyecto creado"
-    )
-    session.add(activity)
-    session.commit()
 
     return RedirectResponse(url=f"/project/{project.id}", status_code=303)
 
@@ -230,12 +225,6 @@ def project_detail(
         .order_by(Document.uploaded_at.desc())
     ).all()
 
-    activities = session.exec(
-        select(Activity)
-        .where(Activity.project_id == project_id)
-        .order_by(Activity.created_at.desc())
-    ).all()
-
     contrapartes = session.exec(
         select(Contraparte)
         .where(Contraparte.project_id == project_id)
@@ -253,7 +242,11 @@ def project_detail(
         )
     ).all()
 
-    from database import TipoDocumentoEnum
+    from database import TipoDocumentoEnum, TipoContraparteEnum
+
+    encargados = session.exec(
+        select(Encargado).where(Encargado.activo == True).order_by(Encargado.nombre)
+    ).all()
 
     return templates.TemplateResponse(
         "project_detail.html",
@@ -262,10 +255,11 @@ def project_detail(
             "project": project,
             "milestones": milestones,
             "documents": documents,
-            "activities": activities,
             "contrapartes": contrapartes,
             "tasks": tasks,
+            "encargados": encargados,
             "tipos_documento": TipoDocumentoEnum,
+            "tipos_contraparte": TipoContraparteEnum,
             "task_statuses": TaskStatusEnum,
         }
     )
@@ -281,7 +275,7 @@ def project_form_edit(
     if not project:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
-    portfolios = session.exec(select(Portfolio)).all()
+    portfolios = session.exec(select(Portfolio).order_by(Portfolio.nombre)).all()
 
     return templates.TemplateResponse(
         "project_form.html",
@@ -290,6 +284,7 @@ def project_form_edit(
             "project": project,
             "sectores": SectorEnum,
             "estados": EstadoEnum,
+            "tipos_financiamiento": TipoFinanciamientoEnum,
             "portfolios": portfolios,
         }
     )
@@ -301,10 +296,11 @@ def project_update(
     project_id: int,
     nombre: str = Form(...),
     sector: str = Form(...),
+    tipo_financiamiento: str = Form(""),
     portfolio_id: str = Form(""),
     monto_deal: str = Form("0"),
     fee_pct: str = Form("0"),
-    probabilidad: str = Form("50"),
+    probabilidad: str = Form(""),
     estado: str = Form("activo"),
     fecha_inicio: Optional[str] = Form(None),
     fecha_cierre_estimada: Optional[str] = Form(None),
@@ -315,11 +311,11 @@ def project_update(
     if not project:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
-    # Parse numeric fields (handle empty strings)
     monto_deal_float = float(monto_deal) if monto_deal else 0.0
     fee_pct_float = float(fee_pct) if fee_pct else 0.0
-    probabilidad_int = int(probabilidad) if probabilidad else 50
+    probabilidad_int = int(probabilidad) if probabilidad not in (None, "") else None
     portfolio_id_int = int(portfolio_id) if portfolio_id else None
+    tipo_fin = TipoFinanciamientoEnum(tipo_financiamiento) if tipo_financiamiento else None
 
     fecha_inicio_dt = None
     if fecha_inicio:
@@ -337,6 +333,7 @@ def project_update(
 
     project.nombre = nombre
     project.sector = SectorEnum(sector)
+    project.tipo_financiamiento = tipo_fin
     project.portfolio_id = portfolio_id_int
     project.monto_deal = monto_deal_float
     project.fee_pct = fee_pct_float
@@ -348,13 +345,6 @@ def project_update(
     project.updated_at = datetime.utcnow()
 
     session.add(project)
-    session.commit()
-
-    activity = Activity(
-        project_id=project.id,
-        descripcion="Proyecto actualizado"
-    )
-    session.add(activity)
     session.commit()
 
     return RedirectResponse(url=f"/project/{project.id}", status_code=303)
@@ -382,13 +372,6 @@ def project_delete(
     ).all()
     for d in documents:
         session.delete(d)
-
-    # Delete activities
-    activities = session.exec(
-        select(Activity).where(Activity.project_id == project_id)
-    ).all()
-    for a in activities:
-        session.delete(a)
 
     # Delete contrapartes
     contrapartes = session.exec(

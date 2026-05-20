@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
-from database import Contraparte, Activity, get_session
+from database import Contraparte, get_session
 
 router = APIRouter(prefix="/api/contrapartes", tags=["contrapartes"])
 
@@ -30,13 +30,6 @@ def add_contraparte(
     session.add(contraparte)
     session.commit()
 
-    activity = Activity(
-        project_id=project_id,
-        descripcion=f"Contraparte agregada: {nombre_empresa}"
-    )
-    session.add(activity)
-    session.commit()
-
     return RedirectResponse(url=f"/project/{project_id}", status_code=303)
 
 
@@ -50,16 +43,7 @@ def delete_contraparte(
         raise HTTPException(status_code=404, detail="Contraparte no encontrada")
 
     project_id = contraparte.project_id
-    nombre = contraparte.nombre_empresa
-
     session.delete(contraparte)
-    session.commit()
-
-    activity = Activity(
-        project_id=project_id,
-        descripcion=f"Contraparte eliminada: {nombre}"
-    )
-    session.add(activity)
     session.commit()
 
     return RedirectResponse(url=f"/project/{project_id}", status_code=303)

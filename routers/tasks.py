@@ -6,7 +6,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 
-from database import Task, Project, Activity, TaskStatusEnum, get_session
+from database import Task, Project, Encargado, TaskStatusEnum, get_session
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -36,13 +36,6 @@ def add_task(
         fecha_limite=_parse_fecha(fecha_limite),
     )
     session.add(task)
-    session.commit()
-
-    activity = Activity(
-        project_id=project_id,
-        descripcion=f"Tarea agregada: {nombre}",
-    )
-    session.add(activity)
     session.commit()
 
     return RedirectResponse(url=f"/project/{project_id}", status_code=303)
@@ -76,10 +69,6 @@ def update_task(
         task.status = new_status
         if new_status == TaskStatusEnum.COMPLETADA and not was_completed:
             task.completed_at = datetime.utcnow()
-            session.add(Activity(
-                project_id=task.project_id,
-                descripcion=f"Tarea completada: {task.nombre}",
-            ))
         elif new_status != TaskStatusEnum.COMPLETADA and was_completed:
             task.completed_at = None
 
@@ -101,14 +90,7 @@ def delete_task(
         raise HTTPException(status_code=404, detail="Tarea no encontrada")
 
     project_id = task.project_id
-    nombre = task.nombre
     session.delete(task)
-    session.commit()
-
-    session.add(Activity(
-        project_id=project_id,
-        descripcion=f"Tarea eliminada: {nombre}",
-    ))
     session.commit()
 
     target = redirect_to or f"/project/{project_id}"
@@ -134,7 +116,12 @@ def tasks_overview(
     if not show_completed:
         tasks = [t for t in tasks if t.status != TaskStatusEnum.COMPLETADA]
 
-    encargados_set = sorted({t.encargado for t in tasks if t.encargado})
+    encargados_activos = session.exec(
+        select(Encargado).where(Encargado.activo == True).order_by(Encargado.nombre)
+    ).all()
+    encargados_set = sorted(
+        {e.nombre for e in encargados_activos} | {t.encargado for t in tasks if t.encargado}
+    )
 
     projects = session.exec(select(Project).order_by(Project.nombre)).all()
 

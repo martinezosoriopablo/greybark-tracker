@@ -39,7 +39,15 @@
                 <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-500/20 text-red-400">Cerrado</span>
                 {% endif %}
             </div>
-            <p class="text-gray-400">{{ project.sector.value | title }}</p>
+            <p class="text-gray-400">
+                {{ project.sector.value | title }}
+                {% if project.tipo_financiamiento %}
+                · <span class="text-orange-400">{{ project.tipo_financiamiento.value | title }}</span>
+                {% endif %}
+                {% if project.portfolio %}
+                · <a href="/portfolio/{{ project.portfolio.id }}" class="text-orange-400 hover:text-orange-300">Portafolio: {{ project.portfolio.nombre }}</a>
+                {% endif %}
+            </p>
         </div>
     </div>
 
@@ -54,10 +62,12 @@
         </div>
         <div>
             <p class="text-gray-500 text-sm">Probabilidad</p>
-            <p class="text-white font-medium">{{ project.probabilidad }}%</p>
+            <p class="text-white font-medium">
+                {% if project.probabilidad is not none %}{{ project.probabilidad }}%{% else %}<span class="text-gray-500">No definida</span>{% endif %}
+            </p>
         </div>
         <div>
-            <p class="text-gray-500 text-sm">Comisión Proyectada</p>
+            <p class="text-gray-500 text-sm">Comisión Proyectada{% if project.probabilidad is none %} (sin ponderar){% endif %}</p>
             <p class="text-orange-400 font-bold text-lg">${{ "{:,.0f}".format(project.comision_proyectada) }}</p>
         </div>
     </div>
@@ -98,8 +108,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <input type="hidden" name="project_id" value="{{ project.id }}">
             <select name="tipo" class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
-                <option value="inversionista">Inversionista</option>
-                <option value="broker">Broker</option>
+                {% for t in tipos_contraparte %}
+                <option value="{{ t.value }}">{% if t.value == 'ambos' %}Broker + Inversionista{% else %}{{ t.value | title }}{% endif %}</option>
+                {% endfor %}
             </select>
             <input type="text" name="nombre_empresa" placeholder="Empresa *" required
                    class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
@@ -123,8 +134,11 @@
             <div class="flex-1">
                 <div class="flex items-center space-x-3">
                     <p class="text-white font-medium">{{ cp.nombre_empresa }}</p>
-                    <span class="px-2 py-0.5 text-xs rounded-full {% if cp.tipo == 'inversionista' %}bg-green-500/20 text-green-400{% else %}bg-blue-500/20 text-blue-400{% endif %}">
-                        {{ cp.tipo | title }}
+                    <span class="px-2 py-0.5 text-xs rounded-full
+                        {% if cp.tipo == 'inversionista' %}bg-green-500/20 text-green-400
+                        {% elif cp.tipo == 'broker' %}bg-blue-500/20 text-blue-400
+                        {% else %}bg-purple-500/20 text-purple-400{% endif %}">
+                        {% if cp.tipo == 'ambos' %}Broker + Inversionista{% else %}{{ cp.tipo | title }}{% endif %}
                     </span>
                 </div>
                 <div class="flex items-center space-x-4 text-sm text-gray-400 mt-1">
@@ -161,14 +175,24 @@
             <input type="hidden" name="project_id" value="{{ project.id }}">
             <input type="text" name="nombre" placeholder="Nombre de la tarea *" required
                    class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
-            <input type="text" name="encargado" placeholder="Encargado"
-                   class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
+            <select name="encargado"
+                    class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+                <option value="">Sin encargado</option>
+                {% for e in encargados %}
+                <option value="{{ e.nombre }}">{{ e.nombre }}</option>
+                {% endfor %}
+            </select>
             <input type="date" name="fecha_limite"
                    class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
             <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2 transition">
                 Agregar Tarea
             </button>
         </div>
+        {% if not encargados %}
+        <p class="text-gray-500 text-xs mt-3">
+            No hay encargados creados. <a href="/encargados" class="text-orange-400 hover:text-orange-300">Crear encargados</a>
+        </p>
+        {% endif %}
     </form>
 
     <!-- Tasks List -->
@@ -243,52 +267,6 @@
     </div>
 </div>
 
-<!-- AI Summary -->
-<div class="bg-dark-700 rounded-xl border border-dark-500 p-6 mb-6">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold text-white">Resumen IA</h2>
-        <button onclick="generateAISummary()"
-                id="ai-summary-btn"
-                class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition flex items-center">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
-            Generar Resumen IA
-        </button>
-    </div>
-    <div id="ai-summary-container" class="hidden">
-        <div id="ai-summary-loading" class="hidden text-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-            <p class="text-gray-400 mt-2">Generando análisis...</p>
-        </div>
-        <div id="ai-summary-content" class="hidden space-y-4">
-            <div class="bg-dark-600 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-gray-400 mb-2">Resumen Ejecutivo</h3>
-                <p id="ai-executive-summary" class="text-white"></p>
-            </div>
-            <div class="bg-dark-600 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-gray-400 mb-2">Estado Actual</h3>
-                <p id="ai-estado-actual" class="text-white"></p>
-            </div>
-            <div class="bg-dark-600 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-gray-400 mb-2">Riesgos Identificados</h3>
-                <ul id="ai-riesgos" class="list-disc list-inside text-white space-y-1"></ul>
-            </div>
-            <div class="bg-dark-600 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-gray-400 mb-2">Próximos Pasos</h3>
-                <ul id="ai-proximos-pasos" class="list-disc list-inside text-white space-y-1"></ul>
-            </div>
-            <div class="bg-orange-500/20 rounded-lg p-4">
-                <h3 class="text-sm font-medium text-orange-400 mb-2">Probabilidad Sugerida por IA</h3>
-                <p id="ai-probabilidad" class="text-2xl font-bold text-orange-400"></p>
-            </div>
-        </div>
-        <div id="ai-summary-error" class="hidden bg-red-500/20 rounded-lg p-4">
-            <p class="text-red-400"></p>
-        </div>
-    </div>
-</div>
-
 <!-- Documents -->
 <div class="bg-dark-700 rounded-xl border border-dark-500 p-6 mb-6">
     <h2 class="text-xl font-bold text-white mb-4">Documentos</h2>
@@ -358,39 +336,6 @@
     {% endif %}
 </div>
 
-<!-- Activities -->
-<div class="bg-dark-700 rounded-xl border border-dark-500 p-6">
-    <h2 class="text-xl font-bold text-white mb-4">Actividad</h2>
-
-    <!-- Add Activity Form -->
-    <form action="/api/activities/add" method="POST" class="mb-6">
-        <div class="flex space-x-4">
-            <input type="hidden" name="project_id" value="{{ project.id }}">
-            <input type="text" name="descripcion" placeholder="Agregar nota de actividad..." required
-                   class="flex-1 bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500">
-            <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 py-2 transition">
-                Agregar
-            </button>
-        </div>
-    </form>
-
-    <!-- Activity Timeline -->
-    {% if activities %}
-    <div class="space-y-4">
-        {% for activity in activities %}
-        <div class="flex items-start space-x-4">
-            <div class="w-2 h-2 mt-2 rounded-full bg-orange-500"></div>
-            <div class="flex-1">
-                <p class="text-white">{{ activity.descripcion }}</p>
-                <p class="text-gray-500 text-sm">{{ activity.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p class="text-gray-500 text-center py-4">No hay actividad registrada</p>
-    {% endif %}
-</div>
 {% endblock %}
 
 {% block scripts %}
@@ -418,63 +363,5 @@ async function toggleMilestone(milestoneId) {
     }
 }
 
-async function generateAISummary() {
-    const container = document.getElementById('ai-summary-container');
-    const loading = document.getElementById('ai-summary-loading');
-    const content = document.getElementById('ai-summary-content');
-    const errorDiv = document.getElementById('ai-summary-error');
-    const btn = document.getElementById('ai-summary-btn');
-
-    container.classList.remove('hidden');
-    loading.classList.remove('hidden');
-    content.classList.add('hidden');
-    errorDiv.classList.add('hidden');
-    btn.disabled = true;
-    btn.classList.add('opacity-50');
-
-    try {
-        const response = await fetch('/api/ai_summary/{{ project.id }}', {
-            method: 'POST'
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Error al generar resumen');
-        }
-
-        const data = await response.json();
-
-        document.getElementById('ai-executive-summary').textContent = data.executive_summary;
-        document.getElementById('ai-estado-actual').textContent = data.estado_actual;
-
-        const riesgosList = document.getElementById('ai-riesgos');
-        riesgosList.innerHTML = '';
-        data.riesgos.forEach(r => {
-            const li = document.createElement('li');
-            li.textContent = r;
-            riesgosList.appendChild(li);
-        });
-
-        const pasosList = document.getElementById('ai-proximos-pasos');
-        pasosList.innerHTML = '';
-        data.proximos_pasos.forEach(p => {
-            const li = document.createElement('li');
-            li.textContent = p;
-            pasosList.appendChild(li);
-        });
-
-        document.getElementById('ai-probabilidad').textContent = `${data.probabilidad_sugerida}%`;
-
-        loading.classList.add('hidden');
-        content.classList.remove('hidden');
-    } catch (error) {
-        loading.classList.add('hidden');
-        errorDiv.classList.remove('hidden');
-        errorDiv.querySelector('p').textContent = error.message;
-    } finally {
-        btn.disabled = false;
-        btn.classList.remove('opacity-50');
-    }
-}
 </script>
 {% endblock %}
