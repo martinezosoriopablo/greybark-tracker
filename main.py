@@ -155,6 +155,37 @@ def migrate_v2():
     return {"status": "complete", "dialect": dialect, "results": results}
 
 
+@app.get("/migrate-encargado-project")
+def migrate_encargado_project():
+    """Migración para agregar campo encargado a la tabla project."""
+    from sqlalchemy import text
+    from database import engine
+
+    results = []
+    dialect = engine.dialect.name
+
+    def run(sql: str, label: str):
+        try:
+            with engine.begin() as conn:
+                conn.execute(text(sql))
+            results.append(f"OK: {label}")
+        except Exception as e:
+            results.append(f"SKIP {label}: {type(e).__name__}: {str(e).splitlines()[0]}")
+
+    if dialect == "postgresql":
+        run(
+            "ALTER TABLE project ADD COLUMN IF NOT EXISTS encargado VARCHAR NOT NULL DEFAULT ''",
+            "project.encargado agregada",
+        )
+    else:
+        run(
+            "ALTER TABLE project ADD COLUMN encargado VARCHAR NOT NULL DEFAULT ''",
+            "project.encargado agregada",
+        )
+
+    return {"status": "complete", "dialect": dialect, "results": results}
+
+
 @app.get("/migrate-milestones")
 def migrate_milestones():
     """One-time migration to remove 'Proyecto' milestone from existing projects"""

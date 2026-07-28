@@ -31,6 +31,7 @@ def dashboard(
     estado: Optional[str] = Query(None),
     contraparte: Optional[str] = Query(None),
     etapa: Optional[str] = Query(None),
+    encargado: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     debug: Optional[str] = Query(None),
     session: Session = Depends(get_session)
@@ -48,6 +49,12 @@ def dashboard(
         # Get all unique contrapartes for filter dropdown
         all_contrapartes = session.exec(select(Contraparte)).all()
         unique_contrapartes = sorted(set(c.nombre_empresa for c in all_contrapartes))
+
+        # Get all encargados for filter dropdown
+        encargados_activos = session.exec(
+            select(Encargado).where(Encargado.activo == True).order_by(Encargado.nombre)
+        ).all()
+        encargados_list = [e.nombre for e in encargados_activos]
 
         # Apply filters
         if sector and sector != "todos":
@@ -67,6 +74,9 @@ def dashboard(
                 projects = [p for p in projects if get_current_stage(p.milestones) is None]
             else:
                 projects = [p for p in projects if get_current_stage(p.milestones) == etapa]
+
+        if encargado and encargado != "todos":
+            projects = [p for p in projects if p.encargado == encargado]
 
         if search:
             search_lower = search.lower()
@@ -111,11 +121,13 @@ def dashboard(
                 "sectores": SectorEnum,
                 "estados": EstadoEnum,
                 "contrapartes_list": unique_contrapartes,
+                "encargados_list": encargados_list,
                 "etapas_list": MILESTONE_NAMES,
                 "filter_sector": sector or "todos",
                 "filter_estado": estado or "todos",
                 "filter_contraparte": contraparte or "todos",
                 "filter_etapa": etapa or "todos",
+                "filter_encargado": encargado or "todos",
                 "filter_search": search or "",
             }
         )
@@ -132,6 +144,9 @@ def project_form_new(
     session: Session = Depends(get_session),
 ):
     portfolios = session.exec(select(Portfolio).order_by(Portfolio.nombre)).all()
+    encargados = session.exec(
+        select(Encargado).where(Encargado.activo == True).order_by(Encargado.nombre)
+    ).all()
     return templates.TemplateResponse(
         "project_form.html",
         {
@@ -141,6 +156,7 @@ def project_form_new(
             "estados": EstadoEnum,
             "tipos_financiamiento": TipoFinanciamientoEnum,
             "portfolios": portfolios,
+            "encargados": encargados,
         }
     )
 
@@ -156,6 +172,7 @@ def project_create(
     fee_pct: str = Form("0"),
     probabilidad: str = Form(""),
     estado: str = Form("activo"),
+    encargado: str = Form(""),
     fecha_inicio: Optional[str] = Form(None),
     fecha_cierre_estimada: Optional[str] = Form(None),
     notas: str = Form(""),
@@ -190,6 +207,7 @@ def project_create(
         fee_pct=fee_pct_float,
         probabilidad=probabilidad_int,
         estado=EstadoEnum(estado),
+        encargado=encargado,
         fecha_inicio=fecha_inicio_dt,
         fecha_cierre_estimada=fecha_cierre_dt,
         notas=notas,
@@ -276,6 +294,9 @@ def project_form_edit(
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
     portfolios = session.exec(select(Portfolio).order_by(Portfolio.nombre)).all()
+    encargados = session.exec(
+        select(Encargado).where(Encargado.activo == True).order_by(Encargado.nombre)
+    ).all()
 
     return templates.TemplateResponse(
         "project_form.html",
@@ -286,6 +307,7 @@ def project_form_edit(
             "estados": EstadoEnum,
             "tipos_financiamiento": TipoFinanciamientoEnum,
             "portfolios": portfolios,
+            "encargados": encargados,
         }
     )
 
@@ -302,6 +324,7 @@ def project_update(
     fee_pct: str = Form("0"),
     probabilidad: str = Form(""),
     estado: str = Form("activo"),
+    encargado: str = Form(""),
     fecha_inicio: Optional[str] = Form(None),
     fecha_cierre_estimada: Optional[str] = Form(None),
     notas: str = Form(""),
@@ -339,6 +362,7 @@ def project_update(
     project.fee_pct = fee_pct_float
     project.probabilidad = probabilidad_int
     project.estado = EstadoEnum(estado)
+    project.encargado = encargado
     project.fecha_inicio = fecha_inicio_dt
     project.fecha_cierre_estimada = fecha_cierre_dt
     project.notas = notas

@@ -93,6 +93,7 @@ class Project(SQLModel, table=True):
     fee_pct: float = Field(default=0.0)
     probabilidad: Optional[int] = Field(default=None, ge=0, le=100)
     estado: EstadoEnum = Field(default=EstadoEnum.ACTIVO)
+    encargado: str = Field(default="")
     fecha_inicio: Optional[datetime] = Field(default=None)
     fecha_cierre_estimada: Optional[datetime] = Field(default=None)
     notas: str = Field(default="")

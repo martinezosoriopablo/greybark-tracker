@@ -109,13 +109,21 @@
             {% endfor %}
         </select>
 
+        <!-- Encargado Filter -->
+        <select name="encargado" class="bg-dark-500 border border-dark-400 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500">
+            <option value="todos" {% if filter_encargado == 'todos' %}selected{% endif %}>Todos los encargados</option>
+            {% for e in encargados_list %}
+            <option value="{{ e }}" {% if filter_encargado == e %}selected{% endif %}>{{ e }}</option>
+            {% endfor %}
+        </select>
+
         <!-- Filter Button -->
         <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition">
             Filtrar
         </button>
 
         <!-- Clear Filters -->
-        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' %}
+        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' or filter_encargado != 'todos' %}
         <a href="/" class="text-gray-400 hover:text-white transition px-2">Limpiar</a>
         {% endif %}
     </form>
@@ -175,10 +183,17 @@
                 {% endif %}
             </div>
 
-            <!-- Sector Badge -->
-            <span class="inline-block px-2 py-1 text-xs rounded bg-dark-500 text-gray-300 mb-4">
-                {{ project.sector.value | title }}
-            </span>
+            <!-- Sector Badge and Encargado -->
+            <div class="flex items-center gap-2 mb-4">
+                <span class="inline-block px-2 py-1 text-xs rounded bg-dark-500 text-gray-300">
+                    {{ project.sector.value | title }}
+                </span>
+                {% if project.encargado %}
+                <span class="inline-block px-2 py-1 text-xs rounded bg-orange-500/20 text-orange-400">
+                    {{ project.encargado }}
+                </span>
+                {% endif %}
+            </div>
 
             <!-- Progress Bar (10 hitos) -->
             <div class="mb-4">
@@ -241,6 +256,7 @@
                 <tr class="text-left text-gray-400 text-sm border-b border-dark-500">
                     <th class="px-6 py-4">Proyecto</th>
                     <th class="px-6 py-4">Contraparte(s)</th>
+                    <th class="px-6 py-4">Encargado</th>
                     <th class="px-6 py-4">Sector</th>
                     <th class="px-6 py-4">Estado</th>
                     <th class="px-6 py-4">Progreso</th>
@@ -262,6 +278,13 @@
                             {% if project.contrapartes|length > 1 %}
                             <span class="text-orange-400 text-sm">+{{ project.contrapartes|length - 1 }}</span>
                             {% endif %}
+                        {% else %}
+                            <span class="text-gray-500">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if project.encargado %}
+                            <span class="text-orange-400">{{ project.encargado }}</span>
                         {% else %}
                             <span class="text-gray-500">-</span>
                         {% endif %}
@@ -315,13 +338,13 @@
     </svg>
     <h3 class="text-xl font-medium text-gray-400 mb-2">No hay proyectos</h3>
     <p class="text-gray-500 mb-6">
-        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' %}
+        {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' or filter_encargado != 'todos' %}
         No se encontraron proyectos con los filtros aplicados.
         {% else %}
         Crea tu primer proyecto para comenzar a trackear deals.
         {% endif %}
     </p>
-    {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' %}
+    {% if filter_search or filter_sector != 'todos' or filter_estado != 'todos' or filter_contraparte != 'todos' or filter_etapa != 'todos' or filter_encargado != 'todos' %}
     <a href="/" class="inline-block bg-dark-500 hover:bg-dark-400 text-white px-6 py-3 rounded-lg transition font-medium mr-2">
         Limpiar Filtros
     </a>

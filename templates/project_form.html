@@ -79,6 +79,19 @@
                 </select>
             </div>
 
+            <!-- Encargado -->
+            <div>
+                <label class="block text-gray-400 text-sm mb-2">Encargado</label>
+                <select name="encargado" class="w-full bg-dark-500 border border-dark-400 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-orange-500">
+                    <option value="">Sin encargado</option>
+                    {% for e in encargados %}
+                    <option value="{{ e.nombre }}" {% if project and project.encargado == e.nombre %}selected{% endif %}>
+                        {{ e.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <!-- Monto Deal -->
             <div>
                 <label class="block text-gray-400 text-sm mb-2">Monto Deal (USD)</label>
