@@ -188,10 +188,10 @@ class Contraparte(SQLModel, table=True):
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./greybark.db")
 
-# Convert to psycopg3 driver for Supabase compatibility
+# Convert to psycopg3 driver for PostgreSQL connections
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
-elif DATABASE_URL.startswith("postgresql://") and "supabase" in DATABASE_URL:
+elif DATABASE_URL.startswith("postgresql://") and "+psycopg" not in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
 
 # Add SSL for Supabase
